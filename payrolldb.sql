@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 14, 2021 at 04:01 AM
--- Server version: 10.4.14-MariaDB
--- PHP Version: 7.4.10
+-- Generation Time: Apr 19, 2021 at 08:16 AM
+-- Server version: 10.4.11-MariaDB
+-- PHP Version: 7.4.5
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -30,13 +30,19 @@ SET time_zone = "+00:00";
 CREATE TABLE `adddeduct_leave` (
   `AddDeductLeaveID` int(11) NOT NULL,
   `Fulldays` float(10,2) NOT NULL,
-  `Halfdays` float(10,2) NOT NULL,
-  `createdOn` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `last_modified` datetime NOT NULL,
+  `Deductdays` float(10,2) NOT NULL,
+  `DeductDate` date NOT NULL,
+  `createdOn` datetime NOT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `Reason` varchar(150) NOT NULL,
   `Credit` float(10,2) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL,
-  `leaveID` int(11) DEFAULT NULL
+  `emp_id` int(11) NOT NULL,
+  `leaveID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `assignID` int(11) NOT NULL,
+  `expiryDate` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -69,10 +75,35 @@ CREATE TABLE `adhoc_payroll_item` (
 
 CREATE TABLE `advance_employee` (
   `advance_id` int(11) NOT NULL,
+  `advance_payrolltype` varchar(100) NOT NULL,
   `advance_date` date NOT NULL,
   `advance_amount` double(12,2) NOT NULL,
+  `advance_note` varchar(100) NOT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `advance_employee`
+--
+
+INSERT INTO `advance_employee` (`advance_id`, `advance_payrolltype`, `advance_date`, `advance_amount`, `advance_note`, `emp_id`) VALUES
+(1, '', '2021-01-14', 70.00, '', NULL),
+(2, '', '2021-01-21', 79.00, '', NULL),
+(3, '', '2021-01-21', 40.00, '', NULL),
+(4, '', '2021-01-12', 500.00, '', NULL),
+(5, '', '2021-01-15', 90.00, '', NULL),
+(6, '', '2021-01-20', 80.00, '', NULL),
+(7, '', '2021-01-28', 40.00, '', NULL),
+(8, 'Second Half/ Month End', '2021-01-20', 30.00, '', NULL),
+(9, 'Second Half/ Month End', '2021-01-26', 40.00, '', NULL),
+(10, 'Second Half/ Month End', '2021-01-27', 40.00, '', NULL),
+(13, 'Second Half/ Month End', '2021-02-20', 900.00, 'zzz', 7),
+(14, 'Second Half/ Month End', '2021-04-09', 80.00, 'aaaaaa', 7),
+(15, 'Second Half/ Month End', '2021-02-18', 70.00, 'aaaaa', 23),
+(16, 'Second Half/ Month End', '2021-02-19', 90.00, 'mmmm', 3),
+(17, 'Second Half/ Month End', '2021-02-26', 80.00, 'bbbbb', 23),
+(18, 'Second Half/ Month End', '2021-04-23', 50.00, '', 19),
+(19, 'Second Half/ Month End', '2021-04-16', 90.00, '', 33);
 
 -- --------------------------------------------------------
 
@@ -84,21 +115,26 @@ CREATE TABLE `allowance` (
   `allowance_id` int(11) NOT NULL,
   `allowance_code` varchar(30) NOT NULL,
   `allowanceDesc` varchar(100) NOT NULL,
-  `payEPF` boolean NOT NULL,
-  `paySOCSOEIS` boolean NOT NULL,
-  `payTAX` boolean NOT NULL,
-  `date`  date NOT NULL
+  `payEPF` tinyint(1) NOT NULL,
+  `paySOCSOEIS` tinyint(1) NOT NULL,
+  `payTAX` tinyint(1) NOT NULL,
+  `date` date NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
 
 --
 -- Dumping data for table `allowance`
 --
 
-INSERT INTO `allowance` (`allowance_id`, `allowance_code`, `allowanceDesc`, `payEPF`, `paySOCSOEIS`, `payTAX`, `date`) VALUES 
-(1, 'attendance', 'allowance attendance', '1', '1', '0', '2021-01-21'),
-(2, 'food', 'allowance food', '0', '0', '0', '2021-01-21');
+INSERT INTO `allowance` (`allowance_id`, `allowance_code`, `allowanceDesc`, `payEPF`, `paySOCSOEIS`, `payTAX`, `date`, `companyID`, `corporateID`) VALUES
+(1, 'attendance', 'allowance attendance', 1, 1, 0, '2021-01-21', 1, 2),
+(2, 'food', 'allowance food', 0, 0, 0, '2021-01-21', 1, 2),
+(3, '3', 'aaa', 0, 1, 1, '2021-02-22', 3, 1),
+(4, 'attendance', 'allowance attendance', 1, 1, 1, '2021-02-23', 3, 1),
+(5, 'food', 'Food Allowance', 1, 1, 1, '2021-02-23', 3, 1),
+(6, 'Travel', 'Travelling Allowance', 1, 1, 1, '2021-02-23', 3, 1),
+(7, 'child', 'child allowance', 1, 1, 1, '2021-03-04', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -108,11 +144,67 @@ INSERT INTO `allowance` (`allowance_id`, `allowance_code`, `allowanceDesc`, `pay
 
 CREATE TABLE `allowance_employee` (
   `allowance_eid` int(11) NOT NULL,
+  `allowancepayrolltype` varchar(100) NOT NULL,
   `allowanceAmount` double(10,2) NOT NULL,
   `allowanceDate` date NOT NULL,
   `allowance_id` int(11) DEFAULT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `emp_id` int(11) DEFAULT NULL,
+  `allowance_epf` tinyint(3) NOT NULL,
+  `allowance_socsoeis` tinyint(3) NOT NULL,
+  `allowance_tax` tinyint(3) NOT NULL,
+  `allowance_note` varchar(100) NOT NULL,
+  `companyID` int(11) DEFAULT NULL,
+  `corporateID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `allowance_employee`
+--
+
+INSERT INTO `allowance_employee` (`allowance_eid`, `allowancepayrolltype`, `allowanceAmount`, `allowanceDate`, `allowance_id`, `emp_id`, `allowance_epf`, `allowance_socsoeis`, `allowance_tax`, `allowance_note`, `companyID`, `corporateID`) VALUES
+(1, '', 90.00, '2021-01-20', NULL, NULL, 0, 0, 0, '', 0, 0),
+(2, '', 90.00, '2021-01-27', NULL, NULL, 0, 0, 0, '', 0, 0),
+(3, '', 90.00, '2021-01-27', NULL, NULL, 0, 0, 0, '', 0, 0),
+(4, '', 90.00, '2021-01-20', NULL, NULL, 0, 0, 0, '', 0, 0),
+(5, '', 50.00, '2021-01-20', NULL, NULL, 0, 0, 0, '', 0, 0),
+(6, '', 40.00, '2021-01-27', NULL, NULL, 0, 0, 0, '', 0, 0),
+(7, '', 90.00, '2021-01-29', NULL, NULL, 0, 0, 0, '', 0, 0),
+(8, '', 70.00, '2021-01-30', NULL, NULL, 0, 0, 0, '', 0, 0),
+(9, '', 90.00, '2021-01-28', NULL, NULL, 0, 0, 0, '', 0, 0),
+(10, '', 80.00, '2021-01-28', NULL, NULL, 0, 0, 0, '', 0, 0),
+(11, '', 70.00, '2021-01-29', NULL, NULL, 0, 0, 0, '', 0, 0),
+(12, '', 90.00, '2021-01-13', NULL, NULL, 0, 0, 0, '', 0, 0),
+(13, 'Second Half/ Month End', 90.00, '2021-01-30', NULL, NULL, 0, 0, 0, '', 0, 0),
+(14, 'First Half', 90.00, '2021-01-29', NULL, NULL, 0, 0, 0, '', 0, 0),
+(15, 'Second Half/ Month End', 90.00, '2021-01-27', NULL, NULL, 0, 0, 0, '', 0, 0),
+(16, 'Second Half/ Month End', 90.00, '2021-01-29', NULL, NULL, 0, 0, 0, '', 0, 0),
+(17, 'Second Half/ Month End', 30.00, '2021-01-28', 1, NULL, 0, 0, 0, '', 0, 0),
+(18, 'First Half', 50.00, '2021-01-30', 2, NULL, 0, 0, 0, '', 0, 0),
+(19, 'Second Half/ Month End', 40.00, '2021-01-30', 2, NULL, 0, 0, 0, '', 0, 0),
+(20, 'Second Half/ Month End', 500.00, '2021-01-29', 1, NULL, 0, 0, 0, '', 0, 0),
+(21, 'Second Half/ Month End', 70.00, '2021-01-28', 1, NULL, 0, 0, 0, '', 0, 0),
+(22, 'Second Half/ Month End', 90.00, '2021-01-30', 1, NULL, 0, 0, 0, '', 0, 0),
+(23, 'Second Half/ Month End', 70.00, '2021-01-29', 1, NULL, 0, 0, 0, '', 0, 0),
+(24, 'Second Half/ Month End', 30.00, '2021-01-20', 1, NULL, 0, 0, 0, '', 0, 0),
+(25, 'First Half', 40.00, '2021-01-20', 2, NULL, 0, 0, 0, '', 0, 0),
+(26, 'First Half', 40.00, '2021-01-20', 2, NULL, 0, 0, 0, '', 0, 0),
+(27, 'Second Half/ Month End', 60.00, '2021-01-29', 1, NULL, 0, 0, 0, '', 0, 0),
+(28, 'Second Half/ Month End', 60.00, '2021-01-27', 2, NULL, 0, 0, 0, '', 0, 0),
+(29, 'Second Half/ Month End', 30.00, '2021-01-20', 1, NULL, 0, 0, 0, '', 0, 0),
+(30, 'Second Half/ Month End', 30.00, '2021-01-20', 1, NULL, 0, 0, 0, '', 0, 0),
+(31, 'Second Half/ Month End', 10.00, '2021-01-28', 1, NULL, 0, 0, 0, '', 0, 0),
+(32, 'Second Half/ Month End', 10.00, '2021-01-28', 1, NULL, 0, 0, 0, '', 0, 0),
+(33, 'Second Half/ Month End', 40.00, '2021-01-26', 1, NULL, 0, 0, 0, '', 0, 0),
+(42, 'Second Half/ Month End', 90.00, '2021-02-03', 1, NULL, 0, 0, 0, '', NULL, NULL),
+(59, 'Second Half/ Month End', 70.00, '2021-02-27', 1, 3, 0, 1, 1, 'kqhks', NULL, NULL),
+(61, 'Second Half/ Month End', 90.00, '2021-02-19', 4, 7, 0, 0, 0, 'ydcyjrcj', NULL, NULL),
+(63, 'Second Half/ Month End', 500.00, '2021-02-26', 4, 7, 1, 1, 0, 'aaaaa', NULL, NULL),
+(64, 'Second Half/ Month End', 90.00, '2021-03-26', 4, 7, 0, 1, 0, '', NULL, NULL),
+(65, 'Second Half/ Month End', 10.00, '2021-04-14', 5, 7, 0, 0, 1, '', NULL, NULL),
+(67, 'Second Half/ Month End', 90.00, '2021-04-22', 4, 33, 0, 0, 0, '', NULL, NULL),
+(68, 'Second Half/ Month End', 70.00, '2021-04-15', 4, 19, 0, 0, 0, '', NULL, NULL),
+(69, 'Second Half/ Month End', 80.00, '2021-04-16', 5, 20, 0, 0, 0, '', NULL, NULL),
+(70, 'Second Half/ Month End', 80.00, '2021-04-16', 5, 23, 0, 0, 0, '', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -130,7 +222,11 @@ CREATE TABLE `applyleave` (
   `start_time_off` time NOT NULL,
   `end_time_off` time NOT NULL,
   `leaveID` int(11) DEFAULT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL,
+  `companyID` int(11) DEFAULT NULL,
+  `corporateID` int(11) DEFAULT NULL,
+  `applyDate` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -141,14 +237,26 @@ CREATE TABLE `applyleave` (
 
 CREATE TABLE `bank` (
   `bankAcc_id` int(11) NOT NULL,
-  `bank_bank_name` varchar(30) NOT NULL,
+  `bank_bank_name` varchar(255) NOT NULL,
+  `bank_account_number` varchar(255) NOT NULL,
   `bank_beneficiary_name` varchar(50) NOT NULL,
-  `bank_ic_num` int(12) NOT NULL,
+  `bank_ic_num` varchar(15) NOT NULL,
   `bank_state` char(20) NOT NULL,
   `bank_salary_percentage` char(8) NOT NULL,
   `bank_is_main` tinyint(1) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `bank`
+--
+
+INSERT INTO `bank` (`bankAcc_id`, `bank_bank_name`, `bank_account_number`, `bank_beneficiary_name`, `bank_ic_num`, `bank_state`, `bank_salary_percentage`, `bank_is_main`, `emp_id`, `userID`) VALUES
+(1, 'Maybank', '11110002425', 'RRRR', '000101-10-1111', 'Active', '13', 1, 29, 0),
+(2, 'AAAA', '123456789', 'BBBB', '12341234567', 'CCCC', '1', 1, NULL, 3),
+(4, 'Maybank', '112111667788', 'ABC ABC', '750406105555', 'selangor', '12', 1, NULL, 42),
+(5, 'maybank', '1123456789', 'Syafiq', '12345677', 'Selangor', '3', 1, NULL, 7);
 
 -- --------------------------------------------------------
 
@@ -158,11 +266,23 @@ CREATE TABLE `bank` (
 
 CREATE TABLE `bik` (
   `bik_id` int(11) NOT NULL,
-  `bik_desc` varchar(50) NOT NULL,
-  `taxExname` varchar(100) NOT NULL,
-  `taxExamount` varchar(100) NOT NULL,
-  `isVOLA` bit(2) NOT NULL
+  `bikDesc` varchar(50) NOT NULL,
+  `taxex_id` int(11) NOT NULL,
+  `eadesc` varchar(100) NOT NULL,
+  `isVOLA` bit(2) NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `bik`
+--
+
+INSERT INTO `bik` (`bik_id`, `bikDesc`, `taxex_id`, `eadesc`, `isVOLA`, `companyID`, `corporateID`) VALUES
+(1, 'Drivers Provided', 0, '', b'00', 0, 1),
+(2, 'Household Servants', 0, '', b'00', 0, 1),
+(3, 'Gardeners', 0, '', b'00', 1, 0),
+(4, 'Fully-furnished with furniture', 0, '', b'00', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -172,10 +292,26 @@ CREATE TABLE `bik` (
 
 CREATE TABLE `bik_employee` (
   `bik_eid` int(11) NOT NULL,
+  `bik_payrolltype` varchar(100) NOT NULL,
   `bik_date` date NOT NULL,
+  `bik_notes` varchar(100) NOT NULL,
   `bik_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `bik_employee`
+--
+
+INSERT INTO `bik_employee` (`bik_eid`, `bik_payrolltype`, `bik_date`, `bik_notes`, `bik_id`, `emp_id`) VALUES
+(1, 'Second Half/ Month End', '2021-01-28', '', NULL, NULL),
+(2, 'Second Half/ Month End', '2021-01-28', '', 1, NULL),
+(3, 'Second Half/ Month End', '2021-01-20', '', 2, NULL),
+(4, 'Second Half/ Month End', '2021-02-12', 'zzzz', 1, 7),
+(6, 'Second Half/ Month End', '2021-02-27', 'rrrrrr', 2, 7),
+(9, 'Second Half/ Month End', '2021-04-16', 'aaaaa', 2, 7),
+(10, 'Second Half/ Month End', '2021-02-25', '60', 2, 3),
+(11, 'Second Half/ Month End', '2021-02-19', 'aaaa', 2, 23);
 
 -- --------------------------------------------------------
 
@@ -185,8 +321,23 @@ CREATE TABLE `bik_employee` (
 
 CREATE TABLE `bonus` (
   `bonus_id` int(11) NOT NULL,
-  `bonusDesc` varchar(50) NOT NULL
+  `bonus_code` varchar(30) NOT NULL,
+  `bonusDesc` varchar(50) NOT NULL,
+  `date` date NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `bonus`
+--
+
+INSERT INTO `bonus` (`bonus_id`, `bonus_code`, `bonusDesc`, `date`, `companyID`, `corporateID`) VALUES
+(1, 'Annual', 'Annual Bonus', '0000-00-00', 0, 1),
+(2, 'Holiday', 'Holiday Bonus', '0000-00-00', 0, 1),
+(3, '', 'Profit Sharing Bonus', '0000-00-00', 1, 0),
+(4, '', 'Retention Bonus', '0000-00-00', 1, 0),
+(5, 'a', 'aaaa', '2021-02-22', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -196,11 +347,31 @@ CREATE TABLE `bonus` (
 
 CREATE TABLE `bonus_employee` (
   `bonus_eid` int(11) NOT NULL,
+  `bonus_payrolltype` varchar(100) NOT NULL,
   `bonus_amount` double(12,2) NOT NULL,
   `bonusDate` date NOT NULL,
   `bonus_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `bonus_employee`
+--
+
+INSERT INTO `bonus_employee` (`bonus_eid`, `bonus_payrolltype`, `bonus_amount`, `bonusDate`, `bonus_id`, `emp_id`) VALUES
+(1, '', 90.00, '2021-01-19', NULL, NULL),
+(2, '', 80.00, '2021-01-20', NULL, NULL),
+(3, '', 90.00, '2021-01-28', NULL, NULL),
+(4, 'Second Half/ Month End', 30.00, '2021-01-28', NULL, NULL),
+(5, 'Second Half/ Month End', 20.00, '2021-01-15', 1, NULL),
+(6, 'First Half', 20.00, '2021-01-25', 2, NULL),
+(7, 'Second Half/ Month End', 80.00, '2021-01-21', 2, NULL),
+(8, 'Second Half/ Month End', 80.00, '2021-01-30', 1, NULL),
+(9, 'Second Half/ Month End', 90.00, '2021-02-09', 1, 3),
+(12, 'First Half', 20.00, '2021-02-28', 2, 7),
+(13, 'Second Half/ Month End', 60.00, '2021-02-13', 1, 7),
+(14, 'Second Half/ Month End', 70.00, '2021-02-17', 1, 23),
+(15, 'First Half', 80.00, '2021-04-15', 2, 7);
 
 -- --------------------------------------------------------
 
@@ -217,7 +388,8 @@ CREATE TABLE `claim` (
   `claimReceipt` blob NOT NULL,
   `claimType_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL,
-  `claimBalance_id` int(11) DEFAULT NULL
+  `userID` int(11) NOT NULL,
+  `applyClaimDate` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -244,7 +416,14 @@ CREATE TABLE `claimbalance` (
 CREATE TABLE `claim_type` (
   `claimType_id` int(11) NOT NULL,
   `claimCode` varchar(25) NOT NULL,
-  `claimDesc` varchar(50) NOT NULL
+  `claimDesc` varchar(50) NOT NULL,
+  `claimAmount` double(10,2) NOT NULL,
+  `claimDate` date NOT NULL,
+  `claimActive` tinyint(1) NOT NULL,
+  `claimLimited` tinyint(1) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL,
+  `companyID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -255,8 +434,21 @@ CREATE TABLE `claim_type` (
 
 CREATE TABLE `commision` (
   `commision_id` int(11) NOT NULL,
-  `commision_desc` varchar(50) NOT NULL
+  `commision_code` varchar(30) NOT NULL,
+  `commisionDesc` varchar(50) NOT NULL,
+  `date` date NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `commision`
+--
+
+INSERT INTO `commision` (`commision_id`, `commision_code`, `commisionDesc`, `date`, `companyID`, `corporateID`) VALUES
+(1, '', 'Sales', '0000-00-00', 0, 1),
+(2, '', '', '0000-00-00', 0, 0),
+(3, '2', 'bbb', '2021-02-22', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -266,11 +458,40 @@ CREATE TABLE `commision` (
 
 CREATE TABLE `commision_employee` (
   `commision_eid` int(11) NOT NULL,
+  `commisionpayrolltype` varchar(100) NOT NULL,
   `commision_amount` double(12,2) NOT NULL,
   `commision_date` date NOT NULL,
   `commision_id` int(11) DEFAULT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `emp_id` int(11) DEFAULT NULL,
+  `commision_note` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `commision_employee`
+--
+
+INSERT INTO `commision_employee` (`commision_eid`, `commisionpayrolltype`, `commision_amount`, `commision_date`, `commision_id`, `emp_id`, `commision_note`) VALUES
+(1, 'Second Half/ Month End', 90.00, '2021-01-29', NULL, NULL, ''),
+(2, 'Second Half/ Month End', 90.00, '2021-01-22', NULL, NULL, ''),
+(3, 'Second Half/ Month End', 80.00, '2021-01-28', NULL, NULL, ''),
+(4, 'Second Half/ Month End', 90.00, '2021-01-28', NULL, NULL, ''),
+(5, 'Second Half/ Month End', 80.00, '2021-01-28', NULL, NULL, ''),
+(6, 'Second Half/ Month End', 80.00, '2021-01-28', NULL, NULL, ''),
+(7, 'Second Half/ Month End', 70.00, '2021-01-30', NULL, NULL, ''),
+(8, 'Second Half/ Month End', 90.00, '2021-01-29', 1, NULL, ''),
+(9, 'Second Half/ Month End', 50.00, '2021-01-26', 1, NULL, ''),
+(10, 'Second Half/ Month End', 40.00, '2021-01-20', 1, NULL, ''),
+(11, 'Second Half/ Month End', 40.00, '2021-01-20', 1, NULL, ''),
+(12, 'Second Half/ Month End', 40.00, '2021-01-28', 1, NULL, ''),
+(13, 'Commission', 50.00, '2021-01-27', 1, NULL, ''),
+(22, 'Second Half/ Month End', 45.00, '2021-02-13', 1, 7, 'sales'),
+(23, 'Second Half/ Month End', 600.00, '2021-02-13', 1, 7, 'aaaa'),
+(24, 'Second Half/ Month End', 65.00, '2021-02-26', 1, 3, 'aaaaa'),
+(25, 'Second Half/ Month End', 80.00, '2021-02-17', 1, 23, 'aaaaa'),
+(27, 'Second Half/ Month End', 30.00, '2021-04-03', 1, 7, ''),
+(28, 'Second Half/ Month End', 50.00, '2021-04-16', 1, 7, ''),
+(29, 'Second Half/ Month End', 90.00, '2021-04-22', 1, 3, ''),
+(30, 'Second Half/ Month End', 90.00, '2021-04-16', 1, 19, '');
 
 -- --------------------------------------------------------
 
@@ -308,7 +529,7 @@ INSERT INTO `company` (`companyID`, `company`, `leaderID`, `profilepic`, `status
 INSERT INTO `company` (`companyID`, `company`, `leaderID`, `profilepic`, `status`, `corporateID`, `create_at`, `scale`, `package`, `expiredate`, `startwork`, `endwork`) VALUES
 (17, 'Victor Manufacturing', 33, NULL, 'Active', 1, '2020-03-17 15:38:17', NULL, NULL, NULL, NULL, NULL),
 (18, 'test', 34, NULL, 'Active', NULL, '2020-04-27 21:49:14', 10, 'Pro', '2021-07-27 21:49:14', NULL, NULL),
-(19, 'dvsv', 35, NULL, 'Active', NULL, '2020-04-28 17:10:30', 5, 'Trial', '2020-05-12 17:10:30', NULL, NULL),
+(19, 'dvsv', NULL, NULL, 'Active', NULL, '2020-04-28 17:10:30', 5, 'Trial', '2020-05-12 17:10:30', NULL, NULL),
 (21, 'Company test load 2', 3, NULL, 'Active', 1, '2020-09-29 17:17:34', NULL, NULL, NULL, NULL, NULL),
 (22, 'Company test load 3', 33, NULL, 'Active', 1, '2020-09-29 18:25:01', NULL, NULL, NULL, NULL, NULL),
 (23, 'awfae', 33, NULL, 'Active', 1, '2020-09-30 09:33:04', NULL, NULL, NULL, NULL, NULL),
@@ -872,6 +1093,502 @@ INSERT INTO `countries` (`id`, `name`, `iso3`, `iso2`, `phonecode`, `capital`, `
 (244, 'Western Sahara', 'ESH', 'EH', '212', 'El-Aaiun', 'MAD', 'الصحراء الغربية', '🇪🇭', 'U+1F1EA U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
 (245, 'Yemen', 'YEM', 'YE', '967', 'Sanaa', 'YER', 'اليَمَن', '🇾🇪', 'U+1F1FE U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q805'),
 (246, 'Zambia', 'ZMB', 'ZM', '260', 'Lusaka', 'ZMK', 'Zambia', '🇿🇲', 'U+1F1FF U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q953'),
+(247, 'Zimbabwe', 'ZWE', 'ZW', '263', 'Harare', 'ZWL', 'Zimbabwe', '🇿🇼', 'U+1F1FF U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q954'),
+(1, 'Afghanistan', 'AFG', 'AF', '93', 'Kabul', 'AFN', 'افغانستان', '🇦🇫', 'U+1F1E6 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q889'),
+(2, 'Aland Islands', 'ALA', 'AX', '+358-18', 'Mariehamn', 'EUR', 'Åland', '🇦🇽', 'U+1F1E6 U+1F1FD', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(3, 'Albania', 'ALB', 'AL', '355', 'Tirana', 'ALL', 'Shqipëria', '🇦🇱', 'U+1F1E6 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q222'),
+(4, 'Algeria', 'DZA', 'DZ', '213', 'Algiers', 'DZD', 'الجزائر', '🇩🇿', 'U+1F1E9 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q262'),
+(5, 'American Samoa', 'ASM', 'AS', '+1-684', 'Pago Pago', 'USD', 'American Samoa', '🇦🇸', 'U+1F1E6 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(6, 'Andorra', 'AND', 'AD', '376', 'Andorra la Vella', 'EUR', 'Andorra', '🇦🇩', 'U+1F1E6 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q228'),
+(7, 'Angola', 'AGO', 'AO', '244', 'Luanda', 'AOA', 'Angola', '🇦🇴', 'U+1F1E6 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q916'),
+(8, 'Anguilla', 'AIA', 'AI', '+1-264', 'The Valley', 'XCD', 'Anguilla', '🇦🇮', 'U+1F1E6 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(9, 'Antarctica', 'ATA', 'AQ', '', '', '', 'Antarctica', '🇦🇶', 'U+1F1E6 U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(10, 'Antigua And Barbuda', 'ATG', 'AG', '+1-268', 'St. John\'s', 'XCD', 'Antigua and Barbuda', '🇦🇬', 'U+1F1E6 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q781'),
+(11, 'Argentina', 'ARG', 'AR', '54', 'Buenos Aires', 'ARS', 'Argentina', '🇦🇷', 'U+1F1E6 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q414'),
+(12, 'Armenia', 'ARM', 'AM', '374', 'Yerevan', 'AMD', 'Հայաստան', '🇦🇲', 'U+1F1E6 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q399'),
+(13, 'Aruba', 'ABW', 'AW', '297', 'Oranjestad', 'AWG', 'Aruba', '🇦🇼', 'U+1F1E6 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(14, 'Australia', 'AUS', 'AU', '61', 'Canberra', 'AUD', 'Australia', '🇦🇺', 'U+1F1E6 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q408'),
+(15, 'Austria', 'AUT', 'AT', '43', 'Vienna', 'EUR', 'Österreich', '🇦🇹', 'U+1F1E6 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q40'),
+(16, 'Azerbaijan', 'AZE', 'AZ', '994', 'Baku', 'AZN', 'Azərbaycan', '🇦🇿', 'U+1F1E6 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q227'),
+(17, 'Bahamas The', 'BHS', 'BS', '+1-242', 'Nassau', 'BSD', 'Bahamas', '🇧🇸', 'U+1F1E7 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q778'),
+(18, 'Bahrain', 'BHR', 'BH', '973', 'Manama', 'BHD', '‏البحرين', '🇧🇭', 'U+1F1E7 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q398'),
+(19, 'Bangladesh', 'BGD', 'BD', '880', 'Dhaka', 'BDT', 'Bangladesh', '🇧🇩', 'U+1F1E7 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q902'),
+(20, 'Barbados', 'BRB', 'BB', '+1-246', 'Bridgetown', 'BBD', 'Barbados', '🇧🇧', 'U+1F1E7 U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q244'),
+(21, 'Belarus', 'BLR', 'BY', '375', 'Minsk', 'BYR', 'Белару́сь', '🇧🇾', 'U+1F1E7 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q184'),
+(22, 'Belgium', 'BEL', 'BE', '32', 'Brussels', 'EUR', 'België', '🇧🇪', 'U+1F1E7 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q31'),
+(23, 'Belize', 'BLZ', 'BZ', '501', 'Belmopan', 'BZD', 'Belize', '🇧🇿', 'U+1F1E7 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q242'),
+(24, 'Benin', 'BEN', 'BJ', '229', 'Porto-Novo', 'XOF', 'Bénin', '🇧🇯', 'U+1F1E7 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q962'),
+(25, 'Bermuda', 'BMU', 'BM', '+1-441', 'Hamilton', 'BMD', 'Bermuda', '🇧🇲', 'U+1F1E7 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(26, 'Bhutan', 'BTN', 'BT', '975', 'Thimphu', 'BTN', 'ʼbrug-yul', '🇧🇹', 'U+1F1E7 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q917'),
+(27, 'Bolivia', 'BOL', 'BO', '591', 'Sucre', 'BOB', 'Bolivia', '🇧🇴', 'U+1F1E7 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q750'),
+(28, 'Bosnia and Herzegovina', 'BIH', 'BA', '387', 'Sarajevo', 'BAM', 'Bosna i Hercegovina', '🇧🇦', 'U+1F1E7 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q225'),
+(29, 'Botswana', 'BWA', 'BW', '267', 'Gaborone', 'BWP', 'Botswana', '🇧🇼', 'U+1F1E7 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q963'),
+(30, 'Bouvet Island', 'BVT', 'BV', '', '', 'NOK', 'Bouvetøya', '🇧🇻', 'U+1F1E7 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(31, 'Brazil', 'BRA', 'BR', '55', 'Brasilia', 'BRL', 'Brasil', '🇧🇷', 'U+1F1E7 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q155'),
+(32, 'British Indian Ocean Territory', 'IOT', 'IO', '246', 'Diego Garcia', 'USD', 'British Indian Ocean Territory', '🇮🇴', 'U+1F1EE U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(33, 'Brunei', 'BRN', 'BN', '673', 'Bandar Seri Begawan', 'BND', 'Negara Brunei Darussalam', '🇧🇳', 'U+1F1E7 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q921'),
+(34, 'Bulgaria', 'BGR', 'BG', '359', 'Sofia', 'BGN', 'България', '🇧🇬', 'U+1F1E7 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q219'),
+(35, 'Burkina Faso', 'BFA', 'BF', '226', 'Ouagadougou', 'XOF', 'Burkina Faso', '🇧🇫', 'U+1F1E7 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q965'),
+(36, 'Burundi', 'BDI', 'BI', '257', 'Bujumbura', 'BIF', 'Burundi', '🇧🇮', 'U+1F1E7 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q967'),
+(37, 'Cambodia', 'KHM', 'KH', '855', 'Phnom Penh', 'KHR', 'Kâmpŭchéa', '🇰🇭', 'U+1F1F0 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q424'),
+(38, 'Cameroon', 'CMR', 'CM', '237', 'Yaounde', 'XAF', 'Cameroon', '🇨🇲', 'U+1F1E8 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1009'),
+(39, 'Canada', 'CAN', 'CA', '1', 'Ottawa', 'CAD', 'Canada', '🇨🇦', 'U+1F1E8 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q16'),
+(40, 'Cape Verde', 'CPV', 'CV', '238', 'Praia', 'CVE', 'Cabo Verde', '🇨🇻', 'U+1F1E8 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1011'),
+(41, 'Cayman Islands', 'CYM', 'KY', '+1-345', 'George Town', 'KYD', 'Cayman Islands', '🇰🇾', 'U+1F1F0 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(42, 'Central African Republic', 'CAF', 'CF', '236', 'Bangui', 'XAF', 'Ködörösêse tî Bêafrîka', '🇨🇫', 'U+1F1E8 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q929'),
+(43, 'Chad', 'TCD', 'TD', '235', 'N\'Djamena', 'XAF', 'Tchad', '🇹🇩', 'U+1F1F9 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q657'),
+(44, 'Chile', 'CHL', 'CL', '56', 'Santiago', 'CLP', 'Chile', '🇨🇱', 'U+1F1E8 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q298'),
+(45, 'China', 'CHN', 'CN', '86', 'Beijing', 'CNY', '中国', '🇨🇳', 'U+1F1E8 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q148'),
+(46, 'Christmas Island', 'CXR', 'CX', '61', 'Flying Fish Cove', 'AUD', 'Christmas Island', '🇨🇽', 'U+1F1E8 U+1F1FD', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(47, 'Cocos (Keeling) Islands', 'CCK', 'CC', '61', 'West Island', 'AUD', 'Cocos (Keeling) Islands', '🇨🇨', 'U+1F1E8 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(48, 'Colombia', 'COL', 'CO', '57', 'Bogota', 'COP', 'Colombia', '🇨🇴', 'U+1F1E8 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q739'),
+(49, 'Comoros', 'COM', 'KM', '269', 'Moroni', 'KMF', 'Komori', '🇰🇲', 'U+1F1F0 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q970'),
+(50, 'Congo', 'COG', 'CG', '242', 'Brazzaville', 'XAF', 'République du Congo', '🇨🇬', 'U+1F1E8 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q971'),
+(51, 'Congo The Democratic Republic Of The', 'COD', 'CD', '243', 'Kinshasa', 'CDF', 'République démocratique du Congo', '🇨🇩', 'U+1F1E8 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q974'),
+(52, 'Cook Islands', 'COK', 'CK', '682', 'Avarua', 'NZD', 'Cook Islands', '🇨🇰', 'U+1F1E8 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q26988'),
+(53, 'Costa Rica', 'CRI', 'CR', '506', 'San Jose', 'CRC', 'Costa Rica', '🇨🇷', 'U+1F1E8 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q800'),
+(54, 'Cote D\'Ivoire (Ivory Coast)', 'CIV', 'CI', '225', 'Yamoussoukro', 'XOF', NULL, '🇨🇮', 'U+1F1E8 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1008'),
+(55, 'Croatia (Hrvatska)', 'HRV', 'HR', '385', 'Zagreb', 'HRK', 'Hrvatska', '🇭🇷', 'U+1F1ED U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q224'),
+(56, 'Cuba', 'CUB', 'CU', '53', 'Havana', 'CUP', 'Cuba', '🇨🇺', 'U+1F1E8 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q241'),
+(57, 'Cyprus', 'CYP', 'CY', '357', 'Nicosia', 'EUR', 'Κύπρος', '🇨🇾', 'U+1F1E8 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q229'),
+(58, 'Czech Republic', 'CZE', 'CZ', '420', 'Prague', 'CZK', 'Česká republika', '🇨🇿', 'U+1F1E8 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q213'),
+(59, 'Denmark', 'DNK', 'DK', '45', 'Copenhagen', 'DKK', 'Danmark', '🇩🇰', 'U+1F1E9 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q35'),
+(60, 'Djibouti', 'DJI', 'DJ', '253', 'Djibouti', 'DJF', 'Djibouti', '🇩🇯', 'U+1F1E9 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q977'),
+(61, 'Dominica', 'DMA', 'DM', '+1-767', 'Roseau', 'XCD', 'Dominica', '🇩🇲', 'U+1F1E9 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q784'),
+(62, 'Dominican Republic', 'DOM', 'DO', '+1-809 and 1-829', 'Santo Domingo', 'DOP', 'República Dominicana', '🇩🇴', 'U+1F1E9 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q786'),
+(63, 'East Timor', 'TLS', 'TL', '670', 'Dili', 'USD', 'Timor-Leste', '🇹🇱', 'U+1F1F9 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q574'),
+(64, 'Ecuador', 'ECU', 'EC', '593', 'Quito', 'USD', 'Ecuador', '🇪🇨', 'U+1F1EA U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q736'),
+(65, 'Egypt', 'EGY', 'EG', '20', 'Cairo', 'EGP', 'مصر‎', '🇪🇬', 'U+1F1EA U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q79'),
+(66, 'El Salvador', 'SLV', 'SV', '503', 'San Salvador', 'USD', 'El Salvador', '🇸🇻', 'U+1F1F8 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q792'),
+(67, 'Equatorial Guinea', 'GNQ', 'GQ', '240', 'Malabo', 'XAF', 'Guinea Ecuatorial', '🇬🇶', 'U+1F1EC U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q983'),
+(68, 'Eritrea', 'ERI', 'ER', '291', 'Asmara', 'ERN', 'ኤርትራ', '🇪🇷', 'U+1F1EA U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q986'),
+(69, 'Estonia', 'EST', 'EE', '372', 'Tallinn', 'EUR', 'Eesti', '🇪🇪', 'U+1F1EA U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q191'),
+(70, 'Ethiopia', 'ETH', 'ET', '251', 'Addis Ababa', 'ETB', 'ኢትዮጵያ', '🇪🇹', 'U+1F1EA U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q115'),
+(71, 'Falkland Islands', 'FLK', 'FK', '500', 'Stanley', 'FKP', 'Falkland Islands', '🇫🇰', 'U+1F1EB U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(72, 'Faroe Islands', 'FRO', 'FO', '298', 'Torshavn', 'DKK', 'Føroyar', '🇫🇴', 'U+1F1EB U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(73, 'Fiji Islands', 'FJI', 'FJ', '679', 'Suva', 'FJD', 'Fiji', '🇫🇯', 'U+1F1EB U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q712'),
+(74, 'Finland', 'FIN', 'FI', '358', 'Helsinki', 'EUR', 'Suomi', '🇫🇮', 'U+1F1EB U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q33'),
+(75, 'France', 'FRA', 'FR', '33', 'Paris', 'EUR', 'France', '🇫🇷', 'U+1F1EB U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q142'),
+(76, 'French Guiana', 'GUF', 'GF', '594', 'Cayenne', 'EUR', 'Guyane française', '🇬🇫', 'U+1F1EC U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(77, 'French Polynesia', 'PYF', 'PF', '689', 'Papeete', 'XPF', 'Polynésie française', '🇵🇫', 'U+1F1F5 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(78, 'French Southern Territories', 'ATF', 'TF', '', 'Port-aux-Francais', 'EUR', 'Territoire des Terres australes et antarctiques fr', '🇹🇫', 'U+1F1F9 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(79, 'Gabon', 'GAB', 'GA', '241', 'Libreville', 'XAF', 'Gabon', '🇬🇦', 'U+1F1EC U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1000'),
+(80, 'Gambia The', 'GMB', 'GM', '220', 'Banjul', 'GMD', 'Gambia', '🇬🇲', 'U+1F1EC U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1005'),
+(81, 'Georgia', 'GEO', 'GE', '995', 'Tbilisi', 'GEL', 'საქართველო', '🇬🇪', 'U+1F1EC U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q230'),
+(82, 'Germany', 'DEU', 'DE', '49', 'Berlin', 'EUR', 'Deutschland', '🇩🇪', 'U+1F1E9 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q183'),
+(83, 'Ghana', 'GHA', 'GH', '233', 'Accra', 'GHS', 'Ghana', '🇬🇭', 'U+1F1EC U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q117'),
+(84, 'Gibraltar', 'GIB', 'GI', '350', 'Gibraltar', 'GIP', 'Gibraltar', '🇬🇮', 'U+1F1EC U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(85, 'Greece', 'GRC', 'GR', '30', 'Athens', 'EUR', 'Ελλάδα', '🇬🇷', 'U+1F1EC U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q41'),
+(86, 'Greenland', 'GRL', 'GL', '299', 'Nuuk', 'DKK', 'Kalaallit Nunaat', '🇬🇱', 'U+1F1EC U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(87, 'Grenada', 'GRD', 'GD', '+1-473', 'St. George\'s', 'XCD', 'Grenada', '🇬🇩', 'U+1F1EC U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q769'),
+(88, 'Guadeloupe', 'GLP', 'GP', '590', 'Basse-Terre', 'EUR', 'Guadeloupe', '🇬🇵', 'U+1F1EC U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(89, 'Guam', 'GUM', 'GU', '+1-671', 'Hagatna', 'USD', 'Guam', '🇬🇺', 'U+1F1EC U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(90, 'Guatemala', 'GTM', 'GT', '502', 'Guatemala City', 'GTQ', 'Guatemala', '🇬🇹', 'U+1F1EC U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q774'),
+(91, 'Guernsey and Alderney', 'GGY', 'GG', '+44-1481', 'St Peter Port', 'GBP', 'Guernsey', '🇬🇬', 'U+1F1EC U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(92, 'Guinea', 'GIN', 'GN', '224', 'Conakry', 'GNF', 'Guinée', '🇬🇳', 'U+1F1EC U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1006'),
+(93, 'Guinea-Bissau', 'GNB', 'GW', '245', 'Bissau', 'XOF', 'Guiné-Bissau', '🇬🇼', 'U+1F1EC U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1007'),
+(94, 'Guyana', 'GUY', 'GY', '592', 'Georgetown', 'GYD', 'Guyana', '🇬🇾', 'U+1F1EC U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q734'),
+(95, 'Haiti', 'HTI', 'HT', '509', 'Port-au-Prince', 'HTG', 'Haïti', '🇭🇹', 'U+1F1ED U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q790'),
+(96, 'Heard and McDonald Islands', 'HMD', 'HM', ' ', '', 'AUD', 'Heard Island and McDonald Islands', '🇭🇲', 'U+1F1ED U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(97, 'Honduras', 'HND', 'HN', '504', 'Tegucigalpa', 'HNL', 'Honduras', '🇭🇳', 'U+1F1ED U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q783'),
+(98, 'Hong Kong S.A.R.', 'HKG', 'HK', '852', 'Hong Kong', 'HKD', '香港', '🇭🇰', 'U+1F1ED U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(99, 'Hungary', 'HUN', 'HU', '36', 'Budapest', 'HUF', 'Magyarország', '🇭🇺', 'U+1F1ED U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q28'),
+(100, 'Iceland', 'ISL', 'IS', '354', 'Reykjavik', 'ISK', 'Ísland', '🇮🇸', 'U+1F1EE U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q189'),
+(101, 'India', 'IND', 'IN', '91', 'New Delhi', 'INR', 'भारत', '🇮🇳', 'U+1F1EE U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q668'),
+(102, 'Indonesia', 'IDN', 'ID', '62', 'Jakarta', 'IDR', 'Indonesia', '🇮🇩', 'U+1F1EE U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q252'),
+(103, 'Iran', 'IRN', 'IR', '98', 'Tehran', 'IRR', 'ایران', '🇮🇷', 'U+1F1EE U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q794'),
+(104, 'Iraq', 'IRQ', 'IQ', '964', 'Baghdad', 'IQD', 'العراق', '🇮🇶', 'U+1F1EE U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q796'),
+(105, 'Ireland', 'IRL', 'IE', '353', 'Dublin', 'EUR', 'Éire', '🇮🇪', 'U+1F1EE U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q27'),
+(106, 'Israel', 'ISR', 'IL', '972', 'Jerusalem', 'ILS', 'יִשְׂרָאֵל', '🇮🇱', 'U+1F1EE U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q801'),
+(107, 'Italy', 'ITA', 'IT', '39', 'Rome', 'EUR', 'Italia', '🇮🇹', 'U+1F1EE U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q38'),
+(108, 'Jamaica', 'JAM', 'JM', '+1-876', 'Kingston', 'JMD', 'Jamaica', '🇯🇲', 'U+1F1EF U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q766'),
+(109, 'Japan', 'JPN', 'JP', '81', 'Tokyo', 'JPY', '日本', '🇯🇵', 'U+1F1EF U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q17'),
+(110, 'Jersey', 'JEY', 'JE', '+44-1534', 'Saint Helier', 'GBP', 'Jersey', '🇯🇪', 'U+1F1EF U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q785'),
+(111, 'Jordan', 'JOR', 'JO', '962', 'Amman', 'JOD', 'الأردن', '🇯🇴', 'U+1F1EF U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q810'),
+(112, 'Kazakhstan', 'KAZ', 'KZ', '7', 'Astana', 'KZT', 'Қазақстан', '🇰🇿', 'U+1F1F0 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q232'),
+(113, 'Kenya', 'KEN', 'KE', '254', 'Nairobi', 'KES', 'Kenya', '🇰🇪', 'U+1F1F0 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q114'),
+(114, 'Kiribati', 'KIR', 'KI', '686', 'Tarawa', 'AUD', 'Kiribati', '🇰🇮', 'U+1F1F0 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q710'),
+(115, 'Korea North', 'PRK', 'KP', '850', 'Pyongyang', 'KPW', '북한', '🇰🇵', 'U+1F1F0 U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q423'),
+(116, 'Korea South', 'KOR', 'KR', '82', 'Seoul', 'KRW', '대한민국', '🇰🇷', 'U+1F1F0 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q884'),
+(117, 'Kuwait', 'KWT', 'KW', '965', 'Kuwait City', 'KWD', 'الكويت', '🇰🇼', 'U+1F1F0 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q817'),
+(118, 'Kyrgyzstan', 'KGZ', 'KG', '996', 'Bishkek', 'KGS', 'Кыргызстан', '🇰🇬', 'U+1F1F0 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q813'),
+(119, 'Laos', 'LAO', 'LA', '856', 'Vientiane', 'LAK', 'ສປປລາວ', '🇱🇦', 'U+1F1F1 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q819'),
+(120, 'Latvia', 'LVA', 'LV', '371', 'Riga', 'EUR', 'Latvija', '🇱🇻', 'U+1F1F1 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q211'),
+(121, 'Lebanon', 'LBN', 'LB', '961', 'Beirut', 'LBP', 'لبنان', '🇱🇧', 'U+1F1F1 U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q822'),
+(122, 'Lesotho', 'LSO', 'LS', '266', 'Maseru', 'LSL', 'Lesotho', '🇱🇸', 'U+1F1F1 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1013'),
+(123, 'Liberia', 'LBR', 'LR', '231', 'Monrovia', 'LRD', 'Liberia', '🇱🇷', 'U+1F1F1 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1014'),
+(124, 'Libya', 'LBY', 'LY', '218', 'Tripolis', 'LYD', '‏ليبيا', '🇱🇾', 'U+1F1F1 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1016'),
+(125, 'Liechtenstein', 'LIE', 'LI', '423', 'Vaduz', 'CHF', 'Liechtenstein', '🇱🇮', 'U+1F1F1 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q347'),
+(126, 'Lithuania', 'LTU', 'LT', '370', 'Vilnius', 'LTL', 'Lietuva', '🇱🇹', 'U+1F1F1 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q37'),
+(127, 'Luxembourg', 'LUX', 'LU', '352', 'Luxembourg', 'EUR', 'Luxembourg', '🇱🇺', 'U+1F1F1 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q32'),
+(128, 'Macau S.A.R.', 'MAC', 'MO', '853', 'Macao', 'MOP', '澳門', '🇲🇴', 'U+1F1F2 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(129, 'Macedonia', 'MKD', 'MK', '389', 'Skopje', 'MKD', 'Северна Македонија', '🇲🇰', 'U+1F1F2 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q221'),
+(130, 'Madagascar', 'MDG', 'MG', '261', 'Antananarivo', 'MGA', 'Madagasikara', '🇲🇬', 'U+1F1F2 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1019'),
+(131, 'Malawi', 'MWI', 'MW', '265', 'Lilongwe', 'MWK', 'Malawi', '🇲🇼', 'U+1F1F2 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1020'),
+(132, 'Malaysia', 'MYS', 'MY', '60', 'Kuala Lumpur', 'MYR', 'Malaysia', '🇲🇾', 'U+1F1F2 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q833'),
+(133, 'Maldives', 'MDV', 'MV', '960', 'Male', 'MVR', 'Maldives', '🇲🇻', 'U+1F1F2 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q826'),
+(134, 'Mali', 'MLI', 'ML', '223', 'Bamako', 'XOF', 'Mali', '🇲🇱', 'U+1F1F2 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q912'),
+(135, 'Malta', 'MLT', 'MT', '356', 'Valletta', 'EUR', 'Malta', '🇲🇹', 'U+1F1F2 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q233'),
+(136, 'Man (Isle of)', 'IMN', 'IM', '+44-1624', 'Douglas, Isle of Man', 'GBP', 'Isle of Man', '🇮🇲', 'U+1F1EE U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(137, 'Marshall Islands', 'MHL', 'MH', '692', 'Majuro', 'USD', 'M̧ajeļ', '🇲🇭', 'U+1F1F2 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q709'),
+(138, 'Martinique', 'MTQ', 'MQ', '596', 'Fort-de-France', 'EUR', 'Martinique', '🇲🇶', 'U+1F1F2 U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(139, 'Mauritania', 'MRT', 'MR', '222', 'Nouakchott', 'MRO', 'موريتانيا', '🇲🇷', 'U+1F1F2 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1025'),
+(140, 'Mauritius', 'MUS', 'MU', '230', 'Port Louis', 'MUR', 'Maurice', '🇲🇺', 'U+1F1F2 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1027'),
+(141, 'Mayotte', 'MYT', 'YT', '262', 'Mamoudzou', 'EUR', 'Mayotte', '🇾🇹', 'U+1F1FE U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(142, 'Mexico', 'MEX', 'MX', '52', 'Mexico City', 'MXN', 'México', '🇲🇽', 'U+1F1F2 U+1F1FD', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q96'),
+(143, 'Micronesia', 'FSM', 'FM', '691', 'Palikir', 'USD', 'Micronesia', '🇫🇲', 'U+1F1EB U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q702'),
+(144, 'Moldova', 'MDA', 'MD', '373', 'Chisinau', 'MDL', 'Moldova', '🇲🇩', 'U+1F1F2 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q217'),
+(145, 'Monaco', 'MCO', 'MC', '377', 'Monaco', 'EUR', 'Monaco', '🇲🇨', 'U+1F1F2 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(146, 'Mongolia', 'MNG', 'MN', '976', 'Ulan Bator', 'MNT', 'Монгол улс', '🇲🇳', 'U+1F1F2 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q711'),
+(147, 'Montenegro', 'MNE', 'ME', '382', 'Podgorica', 'EUR', 'Црна Гора', '🇲🇪', 'U+1F1F2 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q236'),
+(148, 'Montserrat', 'MSR', 'MS', '+1-664', 'Plymouth', 'XCD', 'Montserrat', '🇲🇸', 'U+1F1F2 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(149, 'Morocco', 'MAR', 'MA', '212', 'Rabat', 'MAD', 'المغرب', '🇲🇦', 'U+1F1F2 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1028'),
+(150, 'Mozambique', 'MOZ', 'MZ', '258', 'Maputo', 'MZN', 'Moçambique', '🇲🇿', 'U+1F1F2 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1029'),
+(151, 'Myanmar', 'MMR', 'MM', '95', 'Nay Pyi Taw', 'MMK', 'မြန်မာ', '🇲🇲', 'U+1F1F2 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q836'),
+(152, 'Namibia', 'NAM', 'NA', '264', 'Windhoek', 'NAD', 'Namibia', '🇳🇦', 'U+1F1F3 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1030'),
+(153, 'Nauru', 'NRU', 'NR', '674', 'Yaren', 'AUD', 'Nauru', '🇳🇷', 'U+1F1F3 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q697'),
+(154, 'Nepal', 'NPL', 'NP', '977', 'Kathmandu', 'NPR', 'नपल', '🇳🇵', 'U+1F1F3 U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q837'),
+(155, 'Netherlands Antilles', 'ANT', 'AN', '', '', '', NULL, NULL, NULL, '2018-07-20 04:11:03', '2018-07-20 04:11:03', 1, NULL),
+(156, 'Netherlands The', 'NLD', 'NL', '31', 'Amsterdam', 'EUR', 'Nederland', '🇳🇱', 'U+1F1F3 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q55'),
+(157, 'New Caledonia', 'NCL', 'NC', '687', 'Noumea', 'XPF', 'Nouvelle-Calédonie', '🇳🇨', 'U+1F1F3 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(158, 'New Zealand', 'NZL', 'NZ', '64', 'Wellington', 'NZD', 'New Zealand', '🇳🇿', 'U+1F1F3 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q664');
+INSERT INTO `countries` (`id`, `name`, `iso3`, `iso2`, `phonecode`, `capital`, `currency`, `native`, `emoji`, `emojiU`, `created_at`, `updated_at`, `flag`, `wikiDataId`) VALUES
+(159, 'Nicaragua', 'NIC', 'NI', '505', 'Managua', 'NIO', 'Nicaragua', '🇳🇮', 'U+1F1F3 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q811'),
+(160, 'Niger', 'NER', 'NE', '227', 'Niamey', 'XOF', 'Niger', '🇳🇪', 'U+1F1F3 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1032'),
+(161, 'Nigeria', 'NGA', 'NG', '234', 'Abuja', 'NGN', 'Nigeria', '🇳🇬', 'U+1F1F3 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1033'),
+(162, 'Niue', 'NIU', 'NU', '683', 'Alofi', 'NZD', 'Niuē', '🇳🇺', 'U+1F1F3 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q34020'),
+(163, 'Norfolk Island', 'NFK', 'NF', '672', 'Kingston', 'AUD', 'Norfolk Island', '🇳🇫', 'U+1F1F3 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(164, 'Northern Mariana Islands', 'MNP', 'MP', '+1-670', 'Saipan', 'USD', 'Northern Mariana Islands', '🇲🇵', 'U+1F1F2 U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(165, 'Norway', 'NOR', 'NO', '47', 'Oslo', 'NOK', 'Norge', '🇳🇴', 'U+1F1F3 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q20'),
+(166, 'Oman', 'OMN', 'OM', '968', 'Muscat', 'OMR', 'عمان', '🇴🇲', 'U+1F1F4 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q842'),
+(167, 'Pakistan', 'PAK', 'PK', '92', 'Islamabad', 'PKR', 'Pakistan', '🇵🇰', 'U+1F1F5 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q843'),
+(168, 'Palau', 'PLW', 'PW', '680', 'Melekeok', 'USD', 'Palau', '🇵🇼', 'U+1F1F5 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q695'),
+(169, 'Palestinian Territory Occupied', 'PSE', 'PS', '970', 'East Jerusalem', 'ILS', 'فلسطين', '🇵🇸', 'U+1F1F5 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(170, 'Panama', 'PAN', 'PA', '507', 'Panama City', 'PAB', 'Panamá', '🇵🇦', 'U+1F1F5 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q804'),
+(171, 'Papua new Guinea', 'PNG', 'PG', '675', 'Port Moresby', 'PGK', 'Papua Niugini', '🇵🇬', 'U+1F1F5 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q691'),
+(172, 'Paraguay', 'PRY', 'PY', '595', 'Asuncion', 'PYG', 'Paraguay', '🇵🇾', 'U+1F1F5 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q733'),
+(173, 'Peru', 'PER', 'PE', '51', 'Lima', 'PEN', 'Perú', '🇵🇪', 'U+1F1F5 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q419'),
+(174, 'Philippines', 'PHL', 'PH', '63', 'Manila', 'PHP', 'Pilipinas', '🇵🇭', 'U+1F1F5 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q928'),
+(175, 'Pitcairn Island', 'PCN', 'PN', '870', 'Adamstown', 'NZD', 'Pitcairn Islands', '🇵🇳', 'U+1F1F5 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(176, 'Poland', 'POL', 'PL', '48', 'Warsaw', 'PLN', 'Polska', '🇵🇱', 'U+1F1F5 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q36'),
+(177, 'Portugal', 'PRT', 'PT', '351', 'Lisbon', 'EUR', 'Portugal', '🇵🇹', 'U+1F1F5 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q45'),
+(178, 'Puerto Rico', 'PRI', 'PR', '+1-787 and 1-939', 'San Juan', 'USD', 'Puerto Rico', '🇵🇷', 'U+1F1F5 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(179, 'Qatar', 'QAT', 'QA', '974', 'Doha', 'QAR', 'قطر', '🇶🇦', 'U+1F1F6 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q846'),
+(180, 'Reunion', 'REU', 'RE', '262', 'Saint-Denis', 'EUR', 'La Réunion', '🇷🇪', 'U+1F1F7 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(181, 'Romania', 'ROU', 'RO', '40', 'Bucharest', 'RON', 'România', '🇷🇴', 'U+1F1F7 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q218'),
+(182, 'Russia', 'RUS', 'RU', '7', 'Moscow', 'RUB', 'Россия', '🇷🇺', 'U+1F1F7 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q159'),
+(183, 'Rwanda', 'RWA', 'RW', '250', 'Kigali', 'RWF', 'Rwanda', '🇷🇼', 'U+1F1F7 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1037'),
+(184, 'Saint Helena', 'SHN', 'SH', '290', 'Jamestown', 'SHP', 'Saint Helena', '🇸🇭', 'U+1F1F8 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(185, 'Saint Kitts And Nevis', 'KNA', 'KN', '+1-869', 'Basseterre', 'XCD', 'Saint Kitts and Nevis', '🇰🇳', 'U+1F1F0 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q763'),
+(186, 'Saint Lucia', 'LCA', 'LC', '+1-758', 'Castries', 'XCD', 'Saint Lucia', '🇱🇨', 'U+1F1F1 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q760'),
+(187, 'Saint Pierre and Miquelon', 'SPM', 'PM', '508', 'Saint-Pierre', 'EUR', 'Saint-Pierre-et-Miquelon', '🇵🇲', 'U+1F1F5 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(188, 'Saint Vincent And The Grenadines', 'VCT', 'VC', '+1-784', 'Kingstown', 'XCD', 'Saint Vincent and the Grenadines', '🇻🇨', 'U+1F1FB U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q757'),
+(189, 'Saint-Barthelemy', 'BLM', 'BL', '590', 'Gustavia', 'EUR', 'Saint-Barthélemy', '🇧🇱', 'U+1F1E7 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(190, 'Saint-Martin (French part)', 'MAF', 'MF', '590', 'Marigot', 'EUR', 'Saint-Martin', '🇲🇫', 'U+1F1F2 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(191, 'Samoa', 'WSM', 'WS', '685', 'Apia', 'WST', 'Samoa', '🇼🇸', 'U+1F1FC U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q683'),
+(192, 'San Marino', 'SMR', 'SM', '378', 'San Marino', 'EUR', 'San Marino', '🇸🇲', 'U+1F1F8 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q238'),
+(193, 'Sao Tome and Principe', 'STP', 'ST', '239', 'Sao Tome', 'STD', 'São Tomé e Príncipe', '🇸🇹', 'U+1F1F8 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1039'),
+(194, 'Saudi Arabia', 'SAU', 'SA', '966', 'Riyadh', 'SAR', 'العربية السعودية', '🇸🇦', 'U+1F1F8 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q851'),
+(195, 'Senegal', 'SEN', 'SN', '221', 'Dakar', 'XOF', 'Sénégal', '🇸🇳', 'U+1F1F8 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1041'),
+(196, 'Serbia', 'SRB', 'RS', '381', 'Belgrade', 'RSD', 'Србија', '🇷🇸', 'U+1F1F7 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q403'),
+(197, 'Seychelles', 'SYC', 'SC', '248', 'Victoria', 'SCR', 'Seychelles', '🇸🇨', 'U+1F1F8 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1042'),
+(198, 'Sierra Leone', 'SLE', 'SL', '232', 'Freetown', 'SLL', 'Sierra Leone', '🇸🇱', 'U+1F1F8 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1044'),
+(199, 'Singapore', 'SGP', 'SG', '65', 'Singapur', 'SGD', 'Singapore', '🇸🇬', 'U+1F1F8 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q334'),
+(200, 'Slovakia', 'SVK', 'SK', '421', 'Bratislava', 'EUR', 'Slovensko', '🇸🇰', 'U+1F1F8 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q214'),
+(201, 'Slovenia', 'SVN', 'SI', '386', 'Ljubljana', 'EUR', 'Slovenija', '🇸🇮', 'U+1F1F8 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q215'),
+(202, 'Solomon Islands', 'SLB', 'SB', '677', 'Honiara', 'SBD', 'Solomon Islands', '🇸🇧', 'U+1F1F8 U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q685'),
+(203, 'Somalia', 'SOM', 'SO', '252', 'Mogadishu', 'SOS', 'Soomaaliya', '🇸🇴', 'U+1F1F8 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1045'),
+(204, 'South Africa', 'ZAF', 'ZA', '27', 'Pretoria', 'ZAR', 'South Africa', '🇿🇦', 'U+1F1FF U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q258'),
+(205, 'South Georgia', 'SGS', 'GS', '', 'Grytviken', 'GBP', 'South Georgia', '🇬🇸', 'U+1F1EC U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(206, 'South Sudan', 'SSD', 'SS', '211', 'Juba', 'SSP', 'South Sudan', '🇸🇸', 'U+1F1F8 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q958'),
+(207, 'Spain', 'ESP', 'ES', '34', 'Madrid', 'EUR', 'España', '🇪🇸', 'U+1F1EA U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q29'),
+(208, 'Sri Lanka', 'LKA', 'LK', '94', 'Colombo', 'LKR', 'śrī laṃkāva', '🇱🇰', 'U+1F1F1 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q854'),
+(209, 'Sudan', 'SDN', 'SD', '249', 'Khartoum', 'SDG', 'السودان', '🇸🇩', 'U+1F1F8 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1049'),
+(210, 'Suriname', 'SUR', 'SR', '597', 'Paramaribo', 'SRD', 'Suriname', '🇸🇷', 'U+1F1F8 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q730'),
+(211, 'Svalbard And Jan Mayen Islands', 'SJM', 'SJ', '47', 'Longyearbyen', 'NOK', 'Svalbard og Jan Mayen', '🇸🇯', 'U+1F1F8 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(212, 'Swaziland', 'SWZ', 'SZ', '268', 'Mbabane', 'SZL', 'Swaziland', '🇸🇿', 'U+1F1F8 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1050'),
+(213, 'Sweden', 'SWE', 'SE', '46', 'Stockholm', 'SEK', 'Sverige', '🇸🇪', 'U+1F1F8 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q34'),
+(214, 'Switzerland', 'CHE', 'CH', '41', 'Berne', 'CHF', 'Schweiz', '🇨🇭', 'U+1F1E8 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q39'),
+(215, 'Syria', 'SYR', 'SY', '963', 'Damascus', 'SYP', 'سوريا', '🇸🇾', 'U+1F1F8 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q858'),
+(216, 'Taiwan', 'TWN', 'TW', '886', 'Taipei', 'TWD', '臺灣', '🇹🇼', 'U+1F1F9 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q865'),
+(217, 'Tajikistan', 'TJK', 'TJ', '992', 'Dushanbe', 'TJS', 'Тоҷикистон', '🇹🇯', 'U+1F1F9 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q863'),
+(218, 'Tanzania', 'TZA', 'TZ', '255', 'Dodoma', 'TZS', 'Tanzania', '🇹🇿', 'U+1F1F9 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q924'),
+(219, 'Thailand', 'THA', 'TH', '66', 'Bangkok', 'THB', 'ประเทศไทย', '🇹🇭', 'U+1F1F9 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q869'),
+(220, 'Togo', 'TGO', 'TG', '228', 'Lome', 'XOF', 'Togo', '🇹🇬', 'U+1F1F9 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q945'),
+(221, 'Tokelau', 'TKL', 'TK', '690', '', 'NZD', 'Tokelau', '🇹🇰', 'U+1F1F9 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(222, 'Tonga', 'TON', 'TO', '676', 'Nuku\'alofa', 'TOP', 'Tonga', '🇹🇴', 'U+1F1F9 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q678'),
+(223, 'Trinidad And Tobago', 'TTO', 'TT', '+1-868', 'Port of Spain', 'TTD', 'Trinidad and Tobago', '🇹🇹', 'U+1F1F9 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q754'),
+(224, 'Tunisia', 'TUN', 'TN', '216', 'Tunis', 'TND', 'تونس', '🇹🇳', 'U+1F1F9 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q948'),
+(225, 'Turkey', 'TUR', 'TR', '90', 'Ankara', 'TRY', 'Türkiye', '🇹🇷', 'U+1F1F9 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q43'),
+(226, 'Turkmenistan', 'TKM', 'TM', '993', 'Ashgabat', 'TMT', 'Türkmenistan', '🇹🇲', 'U+1F1F9 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q874'),
+(227, 'Turks And Caicos Islands', 'TCA', 'TC', '+1-649', 'Cockburn Town', 'USD', 'Turks and Caicos Islands', '🇹🇨', 'U+1F1F9 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(228, 'Tuvalu', 'TUV', 'TV', '688', 'Funafuti', 'AUD', 'Tuvalu', '🇹🇻', 'U+1F1F9 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q672'),
+(229, 'Uganda', 'UGA', 'UG', '256', 'Kampala', 'UGX', 'Uganda', '🇺🇬', 'U+1F1FA U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1036'),
+(230, 'Ukraine', 'UKR', 'UA', '380', 'Kiev', 'UAH', 'Україна', '🇺🇦', 'U+1F1FA U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q212'),
+(231, 'United Arab Emirates', 'ARE', 'AE', '971', 'Abu Dhabi', 'AED', 'دولة الإمارات العربية المتحدة', '🇦🇪', 'U+1F1E6 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q878'),
+(232, 'United Kingdom', 'GBR', 'GB', '44', 'London', 'GBP', 'United Kingdom', '🇬🇧', 'U+1F1EC U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q145'),
+(233, 'United States', 'USA', 'US', '1', 'Washington', 'USD', 'United States', '🇺🇸', 'U+1F1FA U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q30'),
+(234, 'United States Minor Outlying Islands', 'UMI', 'UM', '1', '', 'USD', 'United States Minor Outlying Islands', '🇺🇲', 'U+1F1FA U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(235, 'Uruguay', 'URY', 'UY', '598', 'Montevideo', 'UYU', 'Uruguay', '🇺🇾', 'U+1F1FA U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q77'),
+(236, 'Uzbekistan', 'UZB', 'UZ', '998', 'Tashkent', 'UZS', 'O‘zbekiston', '🇺🇿', 'U+1F1FA U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q265'),
+(237, 'Vanuatu', 'VUT', 'VU', '678', 'Port Vila', 'VUV', 'Vanuatu', '🇻🇺', 'U+1F1FB U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q686'),
+(238, 'Vatican City State (Holy See)', 'VAT', 'VA', '379', 'Vatican City', 'EUR', 'Vaticano', '🇻🇦', 'U+1F1FB U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q237'),
+(239, 'Venezuela', 'VEN', 'VE', '58', 'Caracas', 'VEF', 'Venezuela', '🇻🇪', 'U+1F1FB U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q717'),
+(240, 'Vietnam', 'VNM', 'VN', '84', 'Hanoi', 'VND', 'Việt Nam', '🇻🇳', 'U+1F1FB U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q881'),
+(241, 'Virgin Islands (British)', 'VGB', 'VG', '+1-284', 'Road Town', 'USD', 'British Virgin Islands', '🇻🇬', 'U+1F1FB U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(242, 'Virgin Islands (US)', 'VIR', 'VI', '+1-340', 'Charlotte Amalie', 'USD', 'United States Virgin Islands', '🇻🇮', 'U+1F1FB U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(243, 'Wallis And Futuna Islands', 'WLF', 'WF', '681', 'Mata Utu', 'XPF', 'Wallis et Futuna', '🇼🇫', 'U+1F1FC U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(244, 'Western Sahara', 'ESH', 'EH', '212', 'El-Aaiun', 'MAD', 'الصحراء الغربية', '🇪🇭', 'U+1F1EA U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(245, 'Yemen', 'YEM', 'YE', '967', 'Sanaa', 'YER', 'اليَمَن', '🇾🇪', 'U+1F1FE U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q805'),
+(246, 'Zambia', 'ZMB', 'ZM', '260', 'Lusaka', 'ZMK', 'Zambia', '🇿🇲', 'U+1F1FF U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q953'),
+(247, 'Zimbabwe', 'ZWE', 'ZW', '263', 'Harare', 'ZWL', 'Zimbabwe', '🇿🇼', 'U+1F1FF U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q954'),
+(1, 'Afghanistan', 'AFG', 'AF', '93', 'Kabul', 'AFN', 'افغانستان', '🇦🇫', 'U+1F1E6 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q889'),
+(2, 'Aland Islands', 'ALA', 'AX', '+358-18', 'Mariehamn', 'EUR', 'Åland', '🇦🇽', 'U+1F1E6 U+1F1FD', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(3, 'Albania', 'ALB', 'AL', '355', 'Tirana', 'ALL', 'Shqipëria', '🇦🇱', 'U+1F1E6 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q222'),
+(4, 'Algeria', 'DZA', 'DZ', '213', 'Algiers', 'DZD', 'الجزائر', '🇩🇿', 'U+1F1E9 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q262'),
+(5, 'American Samoa', 'ASM', 'AS', '+1-684', 'Pago Pago', 'USD', 'American Samoa', '🇦🇸', 'U+1F1E6 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(6, 'Andorra', 'AND', 'AD', '376', 'Andorra la Vella', 'EUR', 'Andorra', '🇦🇩', 'U+1F1E6 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q228'),
+(7, 'Angola', 'AGO', 'AO', '244', 'Luanda', 'AOA', 'Angola', '🇦🇴', 'U+1F1E6 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q916'),
+(8, 'Anguilla', 'AIA', 'AI', '+1-264', 'The Valley', 'XCD', 'Anguilla', '🇦🇮', 'U+1F1E6 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(9, 'Antarctica', 'ATA', 'AQ', '', '', '', 'Antarctica', '🇦🇶', 'U+1F1E6 U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(10, 'Antigua And Barbuda', 'ATG', 'AG', '+1-268', 'St. John\'s', 'XCD', 'Antigua and Barbuda', '🇦🇬', 'U+1F1E6 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q781'),
+(11, 'Argentina', 'ARG', 'AR', '54', 'Buenos Aires', 'ARS', 'Argentina', '🇦🇷', 'U+1F1E6 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q414'),
+(12, 'Armenia', 'ARM', 'AM', '374', 'Yerevan', 'AMD', 'Հայաստան', '🇦🇲', 'U+1F1E6 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q399'),
+(13, 'Aruba', 'ABW', 'AW', '297', 'Oranjestad', 'AWG', 'Aruba', '🇦🇼', 'U+1F1E6 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(14, 'Australia', 'AUS', 'AU', '61', 'Canberra', 'AUD', 'Australia', '🇦🇺', 'U+1F1E6 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q408'),
+(15, 'Austria', 'AUT', 'AT', '43', 'Vienna', 'EUR', 'Österreich', '🇦🇹', 'U+1F1E6 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q40'),
+(16, 'Azerbaijan', 'AZE', 'AZ', '994', 'Baku', 'AZN', 'Azərbaycan', '🇦🇿', 'U+1F1E6 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q227'),
+(17, 'Bahamas The', 'BHS', 'BS', '+1-242', 'Nassau', 'BSD', 'Bahamas', '🇧🇸', 'U+1F1E7 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q778'),
+(18, 'Bahrain', 'BHR', 'BH', '973', 'Manama', 'BHD', '‏البحرين', '🇧🇭', 'U+1F1E7 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q398'),
+(19, 'Bangladesh', 'BGD', 'BD', '880', 'Dhaka', 'BDT', 'Bangladesh', '🇧🇩', 'U+1F1E7 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q902'),
+(20, 'Barbados', 'BRB', 'BB', '+1-246', 'Bridgetown', 'BBD', 'Barbados', '🇧🇧', 'U+1F1E7 U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q244'),
+(21, 'Belarus', 'BLR', 'BY', '375', 'Minsk', 'BYR', 'Белару́сь', '🇧🇾', 'U+1F1E7 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q184'),
+(22, 'Belgium', 'BEL', 'BE', '32', 'Brussels', 'EUR', 'België', '🇧🇪', 'U+1F1E7 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q31'),
+(23, 'Belize', 'BLZ', 'BZ', '501', 'Belmopan', 'BZD', 'Belize', '🇧🇿', 'U+1F1E7 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q242'),
+(24, 'Benin', 'BEN', 'BJ', '229', 'Porto-Novo', 'XOF', 'Bénin', '🇧🇯', 'U+1F1E7 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q962'),
+(25, 'Bermuda', 'BMU', 'BM', '+1-441', 'Hamilton', 'BMD', 'Bermuda', '🇧🇲', 'U+1F1E7 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(26, 'Bhutan', 'BTN', 'BT', '975', 'Thimphu', 'BTN', 'ʼbrug-yul', '🇧🇹', 'U+1F1E7 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q917'),
+(27, 'Bolivia', 'BOL', 'BO', '591', 'Sucre', 'BOB', 'Bolivia', '🇧🇴', 'U+1F1E7 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q750'),
+(28, 'Bosnia and Herzegovina', 'BIH', 'BA', '387', 'Sarajevo', 'BAM', 'Bosna i Hercegovina', '🇧🇦', 'U+1F1E7 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q225'),
+(29, 'Botswana', 'BWA', 'BW', '267', 'Gaborone', 'BWP', 'Botswana', '🇧🇼', 'U+1F1E7 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q963'),
+(30, 'Bouvet Island', 'BVT', 'BV', '', '', 'NOK', 'Bouvetøya', '🇧🇻', 'U+1F1E7 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(31, 'Brazil', 'BRA', 'BR', '55', 'Brasilia', 'BRL', 'Brasil', '🇧🇷', 'U+1F1E7 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q155'),
+(32, 'British Indian Ocean Territory', 'IOT', 'IO', '246', 'Diego Garcia', 'USD', 'British Indian Ocean Territory', '🇮🇴', 'U+1F1EE U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(33, 'Brunei', 'BRN', 'BN', '673', 'Bandar Seri Begawan', 'BND', 'Negara Brunei Darussalam', '🇧🇳', 'U+1F1E7 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q921'),
+(34, 'Bulgaria', 'BGR', 'BG', '359', 'Sofia', 'BGN', 'България', '🇧🇬', 'U+1F1E7 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q219'),
+(35, 'Burkina Faso', 'BFA', 'BF', '226', 'Ouagadougou', 'XOF', 'Burkina Faso', '🇧🇫', 'U+1F1E7 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q965'),
+(36, 'Burundi', 'BDI', 'BI', '257', 'Bujumbura', 'BIF', 'Burundi', '🇧🇮', 'U+1F1E7 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q967'),
+(37, 'Cambodia', 'KHM', 'KH', '855', 'Phnom Penh', 'KHR', 'Kâmpŭchéa', '🇰🇭', 'U+1F1F0 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q424'),
+(38, 'Cameroon', 'CMR', 'CM', '237', 'Yaounde', 'XAF', 'Cameroon', '🇨🇲', 'U+1F1E8 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1009'),
+(39, 'Canada', 'CAN', 'CA', '1', 'Ottawa', 'CAD', 'Canada', '🇨🇦', 'U+1F1E8 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q16'),
+(40, 'Cape Verde', 'CPV', 'CV', '238', 'Praia', 'CVE', 'Cabo Verde', '🇨🇻', 'U+1F1E8 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1011'),
+(41, 'Cayman Islands', 'CYM', 'KY', '+1-345', 'George Town', 'KYD', 'Cayman Islands', '🇰🇾', 'U+1F1F0 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(42, 'Central African Republic', 'CAF', 'CF', '236', 'Bangui', 'XAF', 'Ködörösêse tî Bêafrîka', '🇨🇫', 'U+1F1E8 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q929'),
+(43, 'Chad', 'TCD', 'TD', '235', 'N\'Djamena', 'XAF', 'Tchad', '🇹🇩', 'U+1F1F9 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q657'),
+(44, 'Chile', 'CHL', 'CL', '56', 'Santiago', 'CLP', 'Chile', '🇨🇱', 'U+1F1E8 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q298'),
+(45, 'China', 'CHN', 'CN', '86', 'Beijing', 'CNY', '中国', '🇨🇳', 'U+1F1E8 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q148'),
+(46, 'Christmas Island', 'CXR', 'CX', '61', 'Flying Fish Cove', 'AUD', 'Christmas Island', '🇨🇽', 'U+1F1E8 U+1F1FD', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(47, 'Cocos (Keeling) Islands', 'CCK', 'CC', '61', 'West Island', 'AUD', 'Cocos (Keeling) Islands', '🇨🇨', 'U+1F1E8 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(48, 'Colombia', 'COL', 'CO', '57', 'Bogota', 'COP', 'Colombia', '🇨🇴', 'U+1F1E8 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q739'),
+(49, 'Comoros', 'COM', 'KM', '269', 'Moroni', 'KMF', 'Komori', '🇰🇲', 'U+1F1F0 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q970'),
+(50, 'Congo', 'COG', 'CG', '242', 'Brazzaville', 'XAF', 'République du Congo', '🇨🇬', 'U+1F1E8 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q971'),
+(51, 'Congo The Democratic Republic Of The', 'COD', 'CD', '243', 'Kinshasa', 'CDF', 'République démocratique du Congo', '🇨🇩', 'U+1F1E8 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q974'),
+(52, 'Cook Islands', 'COK', 'CK', '682', 'Avarua', 'NZD', 'Cook Islands', '🇨🇰', 'U+1F1E8 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q26988'),
+(53, 'Costa Rica', 'CRI', 'CR', '506', 'San Jose', 'CRC', 'Costa Rica', '🇨🇷', 'U+1F1E8 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q800'),
+(54, 'Cote D\'Ivoire (Ivory Coast)', 'CIV', 'CI', '225', 'Yamoussoukro', 'XOF', NULL, '🇨🇮', 'U+1F1E8 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1008'),
+(55, 'Croatia (Hrvatska)', 'HRV', 'HR', '385', 'Zagreb', 'HRK', 'Hrvatska', '🇭🇷', 'U+1F1ED U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q224'),
+(56, 'Cuba', 'CUB', 'CU', '53', 'Havana', 'CUP', 'Cuba', '🇨🇺', 'U+1F1E8 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q241'),
+(57, 'Cyprus', 'CYP', 'CY', '357', 'Nicosia', 'EUR', 'Κύπρος', '🇨🇾', 'U+1F1E8 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q229'),
+(58, 'Czech Republic', 'CZE', 'CZ', '420', 'Prague', 'CZK', 'Česká republika', '🇨🇿', 'U+1F1E8 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q213'),
+(59, 'Denmark', 'DNK', 'DK', '45', 'Copenhagen', 'DKK', 'Danmark', '🇩🇰', 'U+1F1E9 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q35'),
+(60, 'Djibouti', 'DJI', 'DJ', '253', 'Djibouti', 'DJF', 'Djibouti', '🇩🇯', 'U+1F1E9 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q977'),
+(61, 'Dominica', 'DMA', 'DM', '+1-767', 'Roseau', 'XCD', 'Dominica', '🇩🇲', 'U+1F1E9 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q784'),
+(62, 'Dominican Republic', 'DOM', 'DO', '+1-809 and 1-829', 'Santo Domingo', 'DOP', 'República Dominicana', '🇩🇴', 'U+1F1E9 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q786'),
+(63, 'East Timor', 'TLS', 'TL', '670', 'Dili', 'USD', 'Timor-Leste', '🇹🇱', 'U+1F1F9 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q574'),
+(64, 'Ecuador', 'ECU', 'EC', '593', 'Quito', 'USD', 'Ecuador', '🇪🇨', 'U+1F1EA U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q736'),
+(65, 'Egypt', 'EGY', 'EG', '20', 'Cairo', 'EGP', 'مصر‎', '🇪🇬', 'U+1F1EA U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q79'),
+(66, 'El Salvador', 'SLV', 'SV', '503', 'San Salvador', 'USD', 'El Salvador', '🇸🇻', 'U+1F1F8 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q792'),
+(67, 'Equatorial Guinea', 'GNQ', 'GQ', '240', 'Malabo', 'XAF', 'Guinea Ecuatorial', '🇬🇶', 'U+1F1EC U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q983'),
+(68, 'Eritrea', 'ERI', 'ER', '291', 'Asmara', 'ERN', 'ኤርትራ', '🇪🇷', 'U+1F1EA U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q986'),
+(69, 'Estonia', 'EST', 'EE', '372', 'Tallinn', 'EUR', 'Eesti', '🇪🇪', 'U+1F1EA U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q191'),
+(70, 'Ethiopia', 'ETH', 'ET', '251', 'Addis Ababa', 'ETB', 'ኢትዮጵያ', '🇪🇹', 'U+1F1EA U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q115'),
+(71, 'Falkland Islands', 'FLK', 'FK', '500', 'Stanley', 'FKP', 'Falkland Islands', '🇫🇰', 'U+1F1EB U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(72, 'Faroe Islands', 'FRO', 'FO', '298', 'Torshavn', 'DKK', 'Føroyar', '🇫🇴', 'U+1F1EB U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(73, 'Fiji Islands', 'FJI', 'FJ', '679', 'Suva', 'FJD', 'Fiji', '🇫🇯', 'U+1F1EB U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q712'),
+(74, 'Finland', 'FIN', 'FI', '358', 'Helsinki', 'EUR', 'Suomi', '🇫🇮', 'U+1F1EB U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q33'),
+(75, 'France', 'FRA', 'FR', '33', 'Paris', 'EUR', 'France', '🇫🇷', 'U+1F1EB U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q142'),
+(76, 'French Guiana', 'GUF', 'GF', '594', 'Cayenne', 'EUR', 'Guyane française', '🇬🇫', 'U+1F1EC U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(77, 'French Polynesia', 'PYF', 'PF', '689', 'Papeete', 'XPF', 'Polynésie française', '🇵🇫', 'U+1F1F5 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(78, 'French Southern Territories', 'ATF', 'TF', '', 'Port-aux-Francais', 'EUR', 'Territoire des Terres australes et antarctiques fr', '🇹🇫', 'U+1F1F9 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(79, 'Gabon', 'GAB', 'GA', '241', 'Libreville', 'XAF', 'Gabon', '🇬🇦', 'U+1F1EC U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1000'),
+(80, 'Gambia The', 'GMB', 'GM', '220', 'Banjul', 'GMD', 'Gambia', '🇬🇲', 'U+1F1EC U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1005'),
+(81, 'Georgia', 'GEO', 'GE', '995', 'Tbilisi', 'GEL', 'საქართველო', '🇬🇪', 'U+1F1EC U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q230'),
+(82, 'Germany', 'DEU', 'DE', '49', 'Berlin', 'EUR', 'Deutschland', '🇩🇪', 'U+1F1E9 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q183'),
+(83, 'Ghana', 'GHA', 'GH', '233', 'Accra', 'GHS', 'Ghana', '🇬🇭', 'U+1F1EC U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q117'),
+(84, 'Gibraltar', 'GIB', 'GI', '350', 'Gibraltar', 'GIP', 'Gibraltar', '🇬🇮', 'U+1F1EC U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(85, 'Greece', 'GRC', 'GR', '30', 'Athens', 'EUR', 'Ελλάδα', '🇬🇷', 'U+1F1EC U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q41'),
+(86, 'Greenland', 'GRL', 'GL', '299', 'Nuuk', 'DKK', 'Kalaallit Nunaat', '🇬🇱', 'U+1F1EC U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(87, 'Grenada', 'GRD', 'GD', '+1-473', 'St. George\'s', 'XCD', 'Grenada', '🇬🇩', 'U+1F1EC U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q769'),
+(88, 'Guadeloupe', 'GLP', 'GP', '590', 'Basse-Terre', 'EUR', 'Guadeloupe', '🇬🇵', 'U+1F1EC U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(89, 'Guam', 'GUM', 'GU', '+1-671', 'Hagatna', 'USD', 'Guam', '🇬🇺', 'U+1F1EC U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(90, 'Guatemala', 'GTM', 'GT', '502', 'Guatemala City', 'GTQ', 'Guatemala', '🇬🇹', 'U+1F1EC U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q774'),
+(91, 'Guernsey and Alderney', 'GGY', 'GG', '+44-1481', 'St Peter Port', 'GBP', 'Guernsey', '🇬🇬', 'U+1F1EC U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(92, 'Guinea', 'GIN', 'GN', '224', 'Conakry', 'GNF', 'Guinée', '🇬🇳', 'U+1F1EC U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1006'),
+(93, 'Guinea-Bissau', 'GNB', 'GW', '245', 'Bissau', 'XOF', 'Guiné-Bissau', '🇬🇼', 'U+1F1EC U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1007'),
+(94, 'Guyana', 'GUY', 'GY', '592', 'Georgetown', 'GYD', 'Guyana', '🇬🇾', 'U+1F1EC U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q734'),
+(95, 'Haiti', 'HTI', 'HT', '509', 'Port-au-Prince', 'HTG', 'Haïti', '🇭🇹', 'U+1F1ED U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q790'),
+(96, 'Heard and McDonald Islands', 'HMD', 'HM', ' ', '', 'AUD', 'Heard Island and McDonald Islands', '🇭🇲', 'U+1F1ED U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(97, 'Honduras', 'HND', 'HN', '504', 'Tegucigalpa', 'HNL', 'Honduras', '🇭🇳', 'U+1F1ED U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q783'),
+(98, 'Hong Kong S.A.R.', 'HKG', 'HK', '852', 'Hong Kong', 'HKD', '香港', '🇭🇰', 'U+1F1ED U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(99, 'Hungary', 'HUN', 'HU', '36', 'Budapest', 'HUF', 'Magyarország', '🇭🇺', 'U+1F1ED U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q28'),
+(100, 'Iceland', 'ISL', 'IS', '354', 'Reykjavik', 'ISK', 'Ísland', '🇮🇸', 'U+1F1EE U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q189'),
+(101, 'India', 'IND', 'IN', '91', 'New Delhi', 'INR', 'भारत', '🇮🇳', 'U+1F1EE U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q668'),
+(102, 'Indonesia', 'IDN', 'ID', '62', 'Jakarta', 'IDR', 'Indonesia', '🇮🇩', 'U+1F1EE U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q252'),
+(103, 'Iran', 'IRN', 'IR', '98', 'Tehran', 'IRR', 'ایران', '🇮🇷', 'U+1F1EE U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q794'),
+(104, 'Iraq', 'IRQ', 'IQ', '964', 'Baghdad', 'IQD', 'العراق', '🇮🇶', 'U+1F1EE U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q796'),
+(105, 'Ireland', 'IRL', 'IE', '353', 'Dublin', 'EUR', 'Éire', '🇮🇪', 'U+1F1EE U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q27'),
+(106, 'Israel', 'ISR', 'IL', '972', 'Jerusalem', 'ILS', 'יִשְׂרָאֵל', '🇮🇱', 'U+1F1EE U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q801'),
+(107, 'Italy', 'ITA', 'IT', '39', 'Rome', 'EUR', 'Italia', '🇮🇹', 'U+1F1EE U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q38'),
+(108, 'Jamaica', 'JAM', 'JM', '+1-876', 'Kingston', 'JMD', 'Jamaica', '🇯🇲', 'U+1F1EF U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q766'),
+(109, 'Japan', 'JPN', 'JP', '81', 'Tokyo', 'JPY', '日本', '🇯🇵', 'U+1F1EF U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q17'),
+(110, 'Jersey', 'JEY', 'JE', '+44-1534', 'Saint Helier', 'GBP', 'Jersey', '🇯🇪', 'U+1F1EF U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q785'),
+(111, 'Jordan', 'JOR', 'JO', '962', 'Amman', 'JOD', 'الأردن', '🇯🇴', 'U+1F1EF U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q810'),
+(112, 'Kazakhstan', 'KAZ', 'KZ', '7', 'Astana', 'KZT', 'Қазақстан', '🇰🇿', 'U+1F1F0 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q232'),
+(113, 'Kenya', 'KEN', 'KE', '254', 'Nairobi', 'KES', 'Kenya', '🇰🇪', 'U+1F1F0 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q114'),
+(114, 'Kiribati', 'KIR', 'KI', '686', 'Tarawa', 'AUD', 'Kiribati', '🇰🇮', 'U+1F1F0 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q710'),
+(115, 'Korea North', 'PRK', 'KP', '850', 'Pyongyang', 'KPW', '북한', '🇰🇵', 'U+1F1F0 U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q423'),
+(116, 'Korea South', 'KOR', 'KR', '82', 'Seoul', 'KRW', '대한민국', '🇰🇷', 'U+1F1F0 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q884'),
+(117, 'Kuwait', 'KWT', 'KW', '965', 'Kuwait City', 'KWD', 'الكويت', '🇰🇼', 'U+1F1F0 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q817'),
+(118, 'Kyrgyzstan', 'KGZ', 'KG', '996', 'Bishkek', 'KGS', 'Кыргызстан', '🇰🇬', 'U+1F1F0 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q813'),
+(119, 'Laos', 'LAO', 'LA', '856', 'Vientiane', 'LAK', 'ສປປລາວ', '🇱🇦', 'U+1F1F1 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q819'),
+(120, 'Latvia', 'LVA', 'LV', '371', 'Riga', 'EUR', 'Latvija', '🇱🇻', 'U+1F1F1 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q211'),
+(121, 'Lebanon', 'LBN', 'LB', '961', 'Beirut', 'LBP', 'لبنان', '🇱🇧', 'U+1F1F1 U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q822'),
+(122, 'Lesotho', 'LSO', 'LS', '266', 'Maseru', 'LSL', 'Lesotho', '🇱🇸', 'U+1F1F1 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1013'),
+(123, 'Liberia', 'LBR', 'LR', '231', 'Monrovia', 'LRD', 'Liberia', '🇱🇷', 'U+1F1F1 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1014'),
+(124, 'Libya', 'LBY', 'LY', '218', 'Tripolis', 'LYD', '‏ليبيا', '🇱🇾', 'U+1F1F1 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1016'),
+(125, 'Liechtenstein', 'LIE', 'LI', '423', 'Vaduz', 'CHF', 'Liechtenstein', '🇱🇮', 'U+1F1F1 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q347'),
+(126, 'Lithuania', 'LTU', 'LT', '370', 'Vilnius', 'LTL', 'Lietuva', '🇱🇹', 'U+1F1F1 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q37'),
+(127, 'Luxembourg', 'LUX', 'LU', '352', 'Luxembourg', 'EUR', 'Luxembourg', '🇱🇺', 'U+1F1F1 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q32'),
+(128, 'Macau S.A.R.', 'MAC', 'MO', '853', 'Macao', 'MOP', '澳門', '🇲🇴', 'U+1F1F2 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(129, 'Macedonia', 'MKD', 'MK', '389', 'Skopje', 'MKD', 'Северна Македонија', '🇲🇰', 'U+1F1F2 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q221'),
+(130, 'Madagascar', 'MDG', 'MG', '261', 'Antananarivo', 'MGA', 'Madagasikara', '🇲🇬', 'U+1F1F2 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1019'),
+(131, 'Malawi', 'MWI', 'MW', '265', 'Lilongwe', 'MWK', 'Malawi', '🇲🇼', 'U+1F1F2 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1020'),
+(132, 'Malaysia', 'MYS', 'MY', '60', 'Kuala Lumpur', 'MYR', 'Malaysia', '🇲🇾', 'U+1F1F2 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q833'),
+(133, 'Maldives', 'MDV', 'MV', '960', 'Male', 'MVR', 'Maldives', '🇲🇻', 'U+1F1F2 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q826'),
+(134, 'Mali', 'MLI', 'ML', '223', 'Bamako', 'XOF', 'Mali', '🇲🇱', 'U+1F1F2 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q912'),
+(135, 'Malta', 'MLT', 'MT', '356', 'Valletta', 'EUR', 'Malta', '🇲🇹', 'U+1F1F2 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q233'),
+(136, 'Man (Isle of)', 'IMN', 'IM', '+44-1624', 'Douglas, Isle of Man', 'GBP', 'Isle of Man', '🇮🇲', 'U+1F1EE U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(137, 'Marshall Islands', 'MHL', 'MH', '692', 'Majuro', 'USD', 'M̧ajeļ', '🇲🇭', 'U+1F1F2 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q709'),
+(138, 'Martinique', 'MTQ', 'MQ', '596', 'Fort-de-France', 'EUR', 'Martinique', '🇲🇶', 'U+1F1F2 U+1F1F6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(139, 'Mauritania', 'MRT', 'MR', '222', 'Nouakchott', 'MRO', 'موريتانيا', '🇲🇷', 'U+1F1F2 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1025'),
+(140, 'Mauritius', 'MUS', 'MU', '230', 'Port Louis', 'MUR', 'Maurice', '🇲🇺', 'U+1F1F2 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1027'),
+(141, 'Mayotte', 'MYT', 'YT', '262', 'Mamoudzou', 'EUR', 'Mayotte', '🇾🇹', 'U+1F1FE U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(142, 'Mexico', 'MEX', 'MX', '52', 'Mexico City', 'MXN', 'México', '🇲🇽', 'U+1F1F2 U+1F1FD', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q96'),
+(143, 'Micronesia', 'FSM', 'FM', '691', 'Palikir', 'USD', 'Micronesia', '🇫🇲', 'U+1F1EB U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q702'),
+(144, 'Moldova', 'MDA', 'MD', '373', 'Chisinau', 'MDL', 'Moldova', '🇲🇩', 'U+1F1F2 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q217'),
+(145, 'Monaco', 'MCO', 'MC', '377', 'Monaco', 'EUR', 'Monaco', '🇲🇨', 'U+1F1F2 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(146, 'Mongolia', 'MNG', 'MN', '976', 'Ulan Bator', 'MNT', 'Монгол улс', '🇲🇳', 'U+1F1F2 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q711'),
+(147, 'Montenegro', 'MNE', 'ME', '382', 'Podgorica', 'EUR', 'Црна Гора', '🇲🇪', 'U+1F1F2 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q236'),
+(148, 'Montserrat', 'MSR', 'MS', '+1-664', 'Plymouth', 'XCD', 'Montserrat', '🇲🇸', 'U+1F1F2 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(149, 'Morocco', 'MAR', 'MA', '212', 'Rabat', 'MAD', 'المغرب', '🇲🇦', 'U+1F1F2 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1028'),
+(150, 'Mozambique', 'MOZ', 'MZ', '258', 'Maputo', 'MZN', 'Moçambique', '🇲🇿', 'U+1F1F2 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1029'),
+(151, 'Myanmar', 'MMR', 'MM', '95', 'Nay Pyi Taw', 'MMK', 'မြန်မာ', '🇲🇲', 'U+1F1F2 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q836'),
+(152, 'Namibia', 'NAM', 'NA', '264', 'Windhoek', 'NAD', 'Namibia', '🇳🇦', 'U+1F1F3 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1030'),
+(153, 'Nauru', 'NRU', 'NR', '674', 'Yaren', 'AUD', 'Nauru', '🇳🇷', 'U+1F1F3 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q697'),
+(154, 'Nepal', 'NPL', 'NP', '977', 'Kathmandu', 'NPR', 'नपल', '🇳🇵', 'U+1F1F3 U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q837'),
+(155, 'Netherlands Antilles', 'ANT', 'AN', '', '', '', NULL, NULL, NULL, '2018-07-20 04:11:03', '2018-07-20 04:11:03', 1, NULL),
+(156, 'Netherlands The', 'NLD', 'NL', '31', 'Amsterdam', 'EUR', 'Nederland', '🇳🇱', 'U+1F1F3 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q55'),
+(157, 'New Caledonia', 'NCL', 'NC', '687', 'Noumea', 'XPF', 'Nouvelle-Calédonie', '🇳🇨', 'U+1F1F3 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(158, 'New Zealand', 'NZL', 'NZ', '64', 'Wellington', 'NZD', 'New Zealand', '🇳🇿', 'U+1F1F3 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q664'),
+(159, 'Nicaragua', 'NIC', 'NI', '505', 'Managua', 'NIO', 'Nicaragua', '🇳🇮', 'U+1F1F3 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q811'),
+(160, 'Niger', 'NER', 'NE', '227', 'Niamey', 'XOF', 'Niger', '🇳🇪', 'U+1F1F3 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1032'),
+(161, 'Nigeria', 'NGA', 'NG', '234', 'Abuja', 'NGN', 'Nigeria', '🇳🇬', 'U+1F1F3 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1033'),
+(162, 'Niue', 'NIU', 'NU', '683', 'Alofi', 'NZD', 'Niuē', '🇳🇺', 'U+1F1F3 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q34020'),
+(163, 'Norfolk Island', 'NFK', 'NF', '672', 'Kingston', 'AUD', 'Norfolk Island', '🇳🇫', 'U+1F1F3 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(164, 'Northern Mariana Islands', 'MNP', 'MP', '+1-670', 'Saipan', 'USD', 'Northern Mariana Islands', '🇲🇵', 'U+1F1F2 U+1F1F5', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(165, 'Norway', 'NOR', 'NO', '47', 'Oslo', 'NOK', 'Norge', '🇳🇴', 'U+1F1F3 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q20'),
+(166, 'Oman', 'OMN', 'OM', '968', 'Muscat', 'OMR', 'عمان', '🇴🇲', 'U+1F1F4 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q842'),
+(167, 'Pakistan', 'PAK', 'PK', '92', 'Islamabad', 'PKR', 'Pakistan', '🇵🇰', 'U+1F1F5 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q843'),
+(168, 'Palau', 'PLW', 'PW', '680', 'Melekeok', 'USD', 'Palau', '🇵🇼', 'U+1F1F5 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q695'),
+(169, 'Palestinian Territory Occupied', 'PSE', 'PS', '970', 'East Jerusalem', 'ILS', 'فلسطين', '🇵🇸', 'U+1F1F5 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(170, 'Panama', 'PAN', 'PA', '507', 'Panama City', 'PAB', 'Panamá', '🇵🇦', 'U+1F1F5 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q804'),
+(171, 'Papua new Guinea', 'PNG', 'PG', '675', 'Port Moresby', 'PGK', 'Papua Niugini', '🇵🇬', 'U+1F1F5 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q691'),
+(172, 'Paraguay', 'PRY', 'PY', '595', 'Asuncion', 'PYG', 'Paraguay', '🇵🇾', 'U+1F1F5 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q733'),
+(173, 'Peru', 'PER', 'PE', '51', 'Lima', 'PEN', 'Perú', '🇵🇪', 'U+1F1F5 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q419'),
+(174, 'Philippines', 'PHL', 'PH', '63', 'Manila', 'PHP', 'Pilipinas', '🇵🇭', 'U+1F1F5 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q928'),
+(175, 'Pitcairn Island', 'PCN', 'PN', '870', 'Adamstown', 'NZD', 'Pitcairn Islands', '🇵🇳', 'U+1F1F5 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(176, 'Poland', 'POL', 'PL', '48', 'Warsaw', 'PLN', 'Polska', '🇵🇱', 'U+1F1F5 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q36'),
+(177, 'Portugal', 'PRT', 'PT', '351', 'Lisbon', 'EUR', 'Portugal', '🇵🇹', 'U+1F1F5 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q45'),
+(178, 'Puerto Rico', 'PRI', 'PR', '+1-787 and 1-939', 'San Juan', 'USD', 'Puerto Rico', '🇵🇷', 'U+1F1F5 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(179, 'Qatar', 'QAT', 'QA', '974', 'Doha', 'QAR', 'قطر', '🇶🇦', 'U+1F1F6 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q846'),
+(180, 'Reunion', 'REU', 'RE', '262', 'Saint-Denis', 'EUR', 'La Réunion', '🇷🇪', 'U+1F1F7 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(181, 'Romania', 'ROU', 'RO', '40', 'Bucharest', 'RON', 'România', '🇷🇴', 'U+1F1F7 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q218'),
+(182, 'Russia', 'RUS', 'RU', '7', 'Moscow', 'RUB', 'Россия', '🇷🇺', 'U+1F1F7 U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q159'),
+(183, 'Rwanda', 'RWA', 'RW', '250', 'Kigali', 'RWF', 'Rwanda', '🇷🇼', 'U+1F1F7 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1037'),
+(184, 'Saint Helena', 'SHN', 'SH', '290', 'Jamestown', 'SHP', 'Saint Helena', '🇸🇭', 'U+1F1F8 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(185, 'Saint Kitts And Nevis', 'KNA', 'KN', '+1-869', 'Basseterre', 'XCD', 'Saint Kitts and Nevis', '🇰🇳', 'U+1F1F0 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q763'),
+(186, 'Saint Lucia', 'LCA', 'LC', '+1-758', 'Castries', 'XCD', 'Saint Lucia', '🇱🇨', 'U+1F1F1 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q760'),
+(187, 'Saint Pierre and Miquelon', 'SPM', 'PM', '508', 'Saint-Pierre', 'EUR', 'Saint-Pierre-et-Miquelon', '🇵🇲', 'U+1F1F5 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(188, 'Saint Vincent And The Grenadines', 'VCT', 'VC', '+1-784', 'Kingstown', 'XCD', 'Saint Vincent and the Grenadines', '🇻🇨', 'U+1F1FB U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q757'),
+(189, 'Saint-Barthelemy', 'BLM', 'BL', '590', 'Gustavia', 'EUR', 'Saint-Barthélemy', '🇧🇱', 'U+1F1E7 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(190, 'Saint-Martin (French part)', 'MAF', 'MF', '590', 'Marigot', 'EUR', 'Saint-Martin', '🇲🇫', 'U+1F1F2 U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(191, 'Samoa', 'WSM', 'WS', '685', 'Apia', 'WST', 'Samoa', '🇼🇸', 'U+1F1FC U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q683'),
+(192, 'San Marino', 'SMR', 'SM', '378', 'San Marino', 'EUR', 'San Marino', '🇸🇲', 'U+1F1F8 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q238'),
+(193, 'Sao Tome and Principe', 'STP', 'ST', '239', 'Sao Tome', 'STD', 'São Tomé e Príncipe', '🇸🇹', 'U+1F1F8 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1039'),
+(194, 'Saudi Arabia', 'SAU', 'SA', '966', 'Riyadh', 'SAR', 'العربية السعودية', '🇸🇦', 'U+1F1F8 U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q851'),
+(195, 'Senegal', 'SEN', 'SN', '221', 'Dakar', 'XOF', 'Sénégal', '🇸🇳', 'U+1F1F8 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1041'),
+(196, 'Serbia', 'SRB', 'RS', '381', 'Belgrade', 'RSD', 'Србија', '🇷🇸', 'U+1F1F7 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q403'),
+(197, 'Seychelles', 'SYC', 'SC', '248', 'Victoria', 'SCR', 'Seychelles', '🇸🇨', 'U+1F1F8 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1042'),
+(198, 'Sierra Leone', 'SLE', 'SL', '232', 'Freetown', 'SLL', 'Sierra Leone', '🇸🇱', 'U+1F1F8 U+1F1F1', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1044'),
+(199, 'Singapore', 'SGP', 'SG', '65', 'Singapur', 'SGD', 'Singapore', '🇸🇬', 'U+1F1F8 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q334'),
+(200, 'Slovakia', 'SVK', 'SK', '421', 'Bratislava', 'EUR', 'Slovensko', '🇸🇰', 'U+1F1F8 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q214'),
+(201, 'Slovenia', 'SVN', 'SI', '386', 'Ljubljana', 'EUR', 'Slovenija', '🇸🇮', 'U+1F1F8 U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q215'),
+(202, 'Solomon Islands', 'SLB', 'SB', '677', 'Honiara', 'SBD', 'Solomon Islands', '🇸🇧', 'U+1F1F8 U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q685'),
+(203, 'Somalia', 'SOM', 'SO', '252', 'Mogadishu', 'SOS', 'Soomaaliya', '🇸🇴', 'U+1F1F8 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1045'),
+(204, 'South Africa', 'ZAF', 'ZA', '27', 'Pretoria', 'ZAR', 'South Africa', '🇿🇦', 'U+1F1FF U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q258'),
+(205, 'South Georgia', 'SGS', 'GS', '', 'Grytviken', 'GBP', 'South Georgia', '🇬🇸', 'U+1F1EC U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(206, 'South Sudan', 'SSD', 'SS', '211', 'Juba', 'SSP', 'South Sudan', '🇸🇸', 'U+1F1F8 U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q958'),
+(207, 'Spain', 'ESP', 'ES', '34', 'Madrid', 'EUR', 'España', '🇪🇸', 'U+1F1EA U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q29'),
+(208, 'Sri Lanka', 'LKA', 'LK', '94', 'Colombo', 'LKR', 'śrī laṃkāva', '🇱🇰', 'U+1F1F1 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q854'),
+(209, 'Sudan', 'SDN', 'SD', '249', 'Khartoum', 'SDG', 'السودان', '🇸🇩', 'U+1F1F8 U+1F1E9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1049'),
+(210, 'Suriname', 'SUR', 'SR', '597', 'Paramaribo', 'SRD', 'Suriname', '🇸🇷', 'U+1F1F8 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q730'),
+(211, 'Svalbard And Jan Mayen Islands', 'SJM', 'SJ', '47', 'Longyearbyen', 'NOK', 'Svalbard og Jan Mayen', '🇸🇯', 'U+1F1F8 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(212, 'Swaziland', 'SWZ', 'SZ', '268', 'Mbabane', 'SZL', 'Swaziland', '🇸🇿', 'U+1F1F8 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1050'),
+(213, 'Sweden', 'SWE', 'SE', '46', 'Stockholm', 'SEK', 'Sverige', '🇸🇪', 'U+1F1F8 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q34'),
+(214, 'Switzerland', 'CHE', 'CH', '41', 'Berne', 'CHF', 'Schweiz', '🇨🇭', 'U+1F1E8 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q39'),
+(215, 'Syria', 'SYR', 'SY', '963', 'Damascus', 'SYP', 'سوريا', '🇸🇾', 'U+1F1F8 U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q858'),
+(216, 'Taiwan', 'TWN', 'TW', '886', 'Taipei', 'TWD', '臺灣', '🇹🇼', 'U+1F1F9 U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q865'),
+(217, 'Tajikistan', 'TJK', 'TJ', '992', 'Dushanbe', 'TJS', 'Тоҷикистон', '🇹🇯', 'U+1F1F9 U+1F1EF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q863'),
+(218, 'Tanzania', 'TZA', 'TZ', '255', 'Dodoma', 'TZS', 'Tanzania', '🇹🇿', 'U+1F1F9 U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q924'),
+(219, 'Thailand', 'THA', 'TH', '66', 'Bangkok', 'THB', 'ประเทศไทย', '🇹🇭', 'U+1F1F9 U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q869'),
+(220, 'Togo', 'TGO', 'TG', '228', 'Lome', 'XOF', 'Togo', '🇹🇬', 'U+1F1F9 U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q945'),
+(221, 'Tokelau', 'TKL', 'TK', '690', '', 'NZD', 'Tokelau', '🇹🇰', 'U+1F1F9 U+1F1F0', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(222, 'Tonga', 'TON', 'TO', '676', 'Nuku\'alofa', 'TOP', 'Tonga', '🇹🇴', 'U+1F1F9 U+1F1F4', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q678'),
+(223, 'Trinidad And Tobago', 'TTO', 'TT', '+1-868', 'Port of Spain', 'TTD', 'Trinidad and Tobago', '🇹🇹', 'U+1F1F9 U+1F1F9', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q754'),
+(224, 'Tunisia', 'TUN', 'TN', '216', 'Tunis', 'TND', 'تونس', '🇹🇳', 'U+1F1F9 U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q948'),
+(225, 'Turkey', 'TUR', 'TR', '90', 'Ankara', 'TRY', 'Türkiye', '🇹🇷', 'U+1F1F9 U+1F1F7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q43'),
+(226, 'Turkmenistan', 'TKM', 'TM', '993', 'Ashgabat', 'TMT', 'Türkmenistan', '🇹🇲', 'U+1F1F9 U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q874'),
+(227, 'Turks And Caicos Islands', 'TCA', 'TC', '+1-649', 'Cockburn Town', 'USD', 'Turks and Caicos Islands', '🇹🇨', 'U+1F1F9 U+1F1E8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(228, 'Tuvalu', 'TUV', 'TV', '688', 'Funafuti', 'AUD', 'Tuvalu', '🇹🇻', 'U+1F1F9 U+1F1FB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q672'),
+(229, 'Uganda', 'UGA', 'UG', '256', 'Kampala', 'UGX', 'Uganda', '🇺🇬', 'U+1F1FA U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q1036'),
+(230, 'Ukraine', 'UKR', 'UA', '380', 'Kiev', 'UAH', 'Україна', '🇺🇦', 'U+1F1FA U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q212'),
+(231, 'United Arab Emirates', 'ARE', 'AE', '971', 'Abu Dhabi', 'AED', 'دولة الإمارات العربية المتحدة', '🇦🇪', 'U+1F1E6 U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q878'),
+(232, 'United Kingdom', 'GBR', 'GB', '44', 'London', 'GBP', 'United Kingdom', '🇬🇧', 'U+1F1EC U+1F1E7', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q145'),
+(233, 'United States', 'USA', 'US', '1', 'Washington', 'USD', 'United States', '🇺🇸', 'U+1F1FA U+1F1F8', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q30'),
+(234, 'United States Minor Outlying Islands', 'UMI', 'UM', '1', '', 'USD', 'United States Minor Outlying Islands', '🇺🇲', 'U+1F1FA U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(235, 'Uruguay', 'URY', 'UY', '598', 'Montevideo', 'UYU', 'Uruguay', '🇺🇾', 'U+1F1FA U+1F1FE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q77');
+INSERT INTO `countries` (`id`, `name`, `iso3`, `iso2`, `phonecode`, `capital`, `currency`, `native`, `emoji`, `emojiU`, `created_at`, `updated_at`, `flag`, `wikiDataId`) VALUES
+(236, 'Uzbekistan', 'UZB', 'UZ', '998', 'Tashkent', 'UZS', 'O‘zbekiston', '🇺🇿', 'U+1F1FA U+1F1FF', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q265'),
+(237, 'Vanuatu', 'VUT', 'VU', '678', 'Port Vila', 'VUV', 'Vanuatu', '🇻🇺', 'U+1F1FB U+1F1FA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q686'),
+(238, 'Vatican City State (Holy See)', 'VAT', 'VA', '379', 'Vatican City', 'EUR', 'Vaticano', '🇻🇦', 'U+1F1FB U+1F1E6', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q237'),
+(239, 'Venezuela', 'VEN', 'VE', '58', 'Caracas', 'VEF', 'Venezuela', '🇻🇪', 'U+1F1FB U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q717'),
+(240, 'Vietnam', 'VNM', 'VN', '84', 'Hanoi', 'VND', 'Việt Nam', '🇻🇳', 'U+1F1FB U+1F1F3', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q881'),
+(241, 'Virgin Islands (British)', 'VGB', 'VG', '+1-284', 'Road Town', 'USD', 'British Virgin Islands', '🇻🇬', 'U+1F1FB U+1F1EC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(242, 'Virgin Islands (US)', 'VIR', 'VI', '+1-340', 'Charlotte Amalie', 'USD', 'United States Virgin Islands', '🇻🇮', 'U+1F1FB U+1F1EE', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(243, 'Wallis And Futuna Islands', 'WLF', 'WF', '681', 'Mata Utu', 'XPF', 'Wallis et Futuna', '🇼🇫', 'U+1F1FC U+1F1EB', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(244, 'Western Sahara', 'ESH', 'EH', '212', 'El-Aaiun', 'MAD', 'الصحراء الغربية', '🇪🇭', 'U+1F1EA U+1F1ED', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, NULL),
+(245, 'Yemen', 'YEM', 'YE', '967', 'Sanaa', 'YER', 'اليَمَن', '🇾🇪', 'U+1F1FE U+1F1EA', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q805'),
+(246, 'Zambia', 'ZMB', 'ZM', '260', 'Lusaka', 'ZMK', 'Zambia', '🇿🇲', 'U+1F1FF U+1F1F2', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q953'),
 (247, 'Zimbabwe', 'ZWE', 'ZW', '263', 'Harare', 'ZWL', 'Zimbabwe', '🇿🇼', 'U+1F1FF U+1F1FC', '2018-07-20 04:11:03', '2020-05-15 18:49:11', 1, 'Q954');
 
 -- --------------------------------------------------------
@@ -882,9 +1599,30 @@ INSERT INTO `countries` (`id`, `name`, `iso3`, `iso2`, `phonecode`, `capital`, `
 
 CREATE TABLE `cp38_employee` (
   `cp38_eid` int(11) NOT NULL,
+  `cp38_payrolltype` varchar(100) NOT NULL,
   `cp38_amount` double(12,2) NOT NULL,
+  `cp38_date` date NOT NULL,
+  `cp38_note` varchar(100) NOT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `cp38_employee`
+--
+
+INSERT INTO `cp38_employee` (`cp38_eid`, `cp38_payrolltype`, `cp38_amount`, `cp38_date`, `cp38_note`, `emp_id`) VALUES
+(1, '', 70.00, '0000-00-00', '', NULL),
+(2, '', 70.00, '0000-00-00', '', NULL),
+(3, '', 70.00, '0000-00-00', '', NULL),
+(4, '', 70.00, '0000-00-00', '', NULL),
+(5, '', 80.00, '0000-00-00', '', NULL),
+(6, '', 50.00, '0000-00-00', '', NULL),
+(7, 'Second Half/ Month End', 60.00, '0000-00-00', '', NULL),
+(8, 'Second Half/ Month End', 30.00, '0000-00-00', '', NULL),
+(19, 'Second Half/ Month End', 35.00, '2021-02-20', 'bbbb', 7),
+(20, 'First Half', 20.00, '2021-04-22', 'ccc', 7),
+(23, 'Second Half/ Month End', 70.00, '2021-02-19', 'aaaaa', 23),
+(24, 'Second Half/ Month End', 80.00, '2021-02-19', 'ddd', 3);
 
 -- --------------------------------------------------------
 
@@ -894,11 +1632,24 @@ CREATE TABLE `cp38_employee` (
 
 CREATE TABLE `deduction` (
   `deduction_id` int(11) NOT NULL,
+  `deduction_code` varchar(30) NOT NULL,
   `deductionDesc` varchar(50) NOT NULL,
   `payEPF` tinyint(1) NOT NULL,
   `paySOCSOEIS` tinyint(1) NOT NULL,
-  `payTAX` tinyint(1) NOT NULL
+  `payTAX` tinyint(1) NOT NULL,
+  `date` date NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `deduction`
+--
+
+INSERT INTO `deduction` (`deduction_id`, `deduction_code`, `deductionDesc`, `payEPF`, `paySOCSOEIS`, `payTAX`, `date`, `companyID`, `corporateID`) VALUES
+(1, 'Late', 'Lateness', 0, 1, 1, '0000-00-00', 0, 1),
+(2, 'Shortages', 'Cash Shortages', 1, 1, 1, '0000-00-00', 0, 1),
+(3, 'a', 'aaa', 1, 1, 1, '2021-02-26', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -908,11 +1659,29 @@ CREATE TABLE `deduction` (
 
 CREATE TABLE `deduction_employee` (
   `deduction_eid` int(11) NOT NULL,
+  `deduction_payrolltype` varchar(100) NOT NULL,
   `deductionAmount` double(12,2) NOT NULL,
   `deductionDate` date NOT NULL,
+  `deduction_epf` tinyint(3) NOT NULL,
+  `deduction_socsoeis` tinyint(3) NOT NULL,
+  `deduction_tax` tinyint(3) NOT NULL,
+  `deduction_note` varchar(100) NOT NULL,
   `deduction_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `deduction_employee`
+--
+
+INSERT INTO `deduction_employee` (`deduction_eid`, `deduction_payrolltype`, `deductionAmount`, `deductionDate`, `deduction_epf`, `deduction_socsoeis`, `deduction_tax`, `deduction_note`, `deduction_id`, `emp_id`) VALUES
+(4, 'Second Half/ Month End', 60.00, '2021-02-13', 0, 0, 1, 'aaaa', 2, 7),
+(5, 'Second Half/ Month End', 80.00, '2021-02-13', 1, 1, 1, 'ccc', 2, 7),
+(6, 'Second Half/ Month End', 50.00, '2021-02-24', 0, 1, 1, 'aaaaa', 2, 23),
+(7, 'Second Half/ Month End', 30.00, '2021-02-26', 1, 1, 1, 'dddd', 2, 3),
+(9, 'Second Half/ Month End', 40.00, '2021-03-15', 1, 1, 1, 'march 2021', 1, 7),
+(10, 'Second Half/ Month End', 10.00, '2021-04-02', 0, 0, 0, '', 2, 7),
+(11, 'Second Half/ Month End', 10.00, '2021-04-17', 0, 0, 1, '', 2, 3);
 
 -- --------------------------------------------------------
 
@@ -947,9 +1716,25 @@ CREATE TABLE `emergency_contact` (
   `ec_id` int(11) NOT NULL,
   `ec_name` varchar(50) NOT NULL,
   `ec_relation` varchar(20) NOT NULL,
-  `ec_phone_num` int(15) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `ec_phone_num` varchar(15) NOT NULL,
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `emergency_contact`
+--
+
+INSERT INTO `emergency_contact` (`ec_id`, `ec_name`, `ec_relation`, `ec_phone_num`, `emp_id`, `userID`) VALUES
+(1, 'Qwert', 'Mother', '0192342341', 32, 0),
+(2, 'Zxcvb', 'Mother', '0119995578', 29, 0),
+(3, 'Mnb', 'Father', '0189738494', 1, 0),
+(4, 'PPPP', 'Sister', '0112229988', 30, 0),
+(5, 'ER', 'Dad', '0122235454', 28, 0),
+(6, 'm', 'mother', '012-2345678', NULL, 3),
+(12, 'hdiuwh', 'mother', '012-54398765', NULL, 41),
+(13, 'hdiuwh', 'mother', '012-54398765', NULL, 41),
+(14, 'hdiuwh', 'mother', '012-54398765', NULL, 41);
 
 -- --------------------------------------------------------
 
@@ -959,6 +1744,7 @@ CREATE TABLE `emergency_contact` (
 
 CREATE TABLE `employee` (
   `emp_id` int(11) NOT NULL,
+  `emp_name` varchar(150) NOT NULL,
   `emp_ic_num` int(12) NOT NULL,
   `emp_passport_num` char(20) NOT NULL,
   `emp_gender` char(6) NOT NULL,
@@ -967,6 +1753,7 @@ CREATE TABLE `employee` (
   `emp_dob` char(10) NOT NULL,
   `emp_age` int(3) NOT NULL,
   `emp_phone_num` char(15) NOT NULL,
+  `emp_email` varchar(255) NOT NULL,
   `emp_address_street` varchar(50) NOT NULL,
   `emp_address_state` varchar(20) NOT NULL,
   `emp_address_postcode` int(7) NOT NULL,
@@ -976,8 +1763,64 @@ CREATE TABLE `employee` (
   `emp_nationality` varchar(20) NOT NULL,
   `emp_disabled_status` tinyint(1) NOT NULL,
   `emp_foreigner` tinyint(1) NOT NULL,
-  `emp_active_status` tinyint(1) NOT NULL
+  `emp_active_status` tinyint(1) NOT NULL,
+  `corporateID` varchar(20) NOT NULL,
+  `companyID` varchar(20) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `salary` int(50) NOT NULL,
+  `grosspay` int(50) NOT NULL,
+  `totalDeduction` int(50) NOT NULL,
+  `netpay` int(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `employee`
+--
+
+INSERT INTO `employee` (`emp_id`, `emp_name`, `emp_ic_num`, `emp_passport_num`, `emp_gender`, `emp_race`, `emp_religion`, `emp_dob`, `emp_age`, `emp_phone_num`, `emp_email`, `emp_address_street`, `emp_address_state`, `emp_address_postcode`, `emp_address_city`, `emp_maritial_status`, `emp_residence_country`, `emp_nationality`, `emp_disabled_status`, `emp_foreigner`, `emp_active_status`, `corporateID`, `companyID`, `userID`, `salary`, `grosspay`, `totalDeduction`, `netpay`) VALUES
+(1, '', 1111111, '11111', 'female', 'chinese', 'buddist', '2021-02-16', 23, '1234456', '454', '', '', 0, '', 'married', 'Bahamas The', 'rt4t', 0, 1, 1, '', '', 3, 500, 30, 50, 0),
+(3, '', 1111111, '11111', 'female', 'chinese', 'buddist', '2021-02-16', 23, '1234456', '454', '', '', 0, '', 'married', 'Bahamas The', 'rt4t', 0, 1, 1, '', '', 7, 500, 0, 50, 0),
+(4, '', 1111111, '11111', 'female', 'chinese', 'buddist', '2021-02-16', 23, '1234456', '454', '', '', 0, '', 'married', 'Bahamas The', 'rt4t', 0, 1, 1, '', '', 23, 500, 0, 0, 0),
+(5, '', 1111111, '11111', 'female', 'chinese', 'buddist', '2021-02-16', 23, '1234456', '454', '', '', 0, '', 'married', 'Bahamas The', 'rt4t', 0, 1, 1, '', '', 33, 600, 0, 0, 0),
+(6, '', 1111111, '11111', 'female', 'chinese', 'buddist', '2021-02-16', 23, '1234456', '454', '', '', 0, '', 'married', 'Bahamas The', 'rt4t', 0, 1, 1, '', '', 19, 700, 0, 0, 0),
+(7, '', 1111111, '11111', 'female', 'chinese', 'buddist', '2021-02-16', 23, '1234456', '454', '', '', 0, '', 'married', 'Bahamas The', 'rt4t', 0, 1, 1, '', '', 20, 500, 0, 0, 0),
+(8, '', 1111111, '11111', 'female', 'chinese', 'buddist', '2021-02-16', 23, '1234456', '454', '', '', 0, '', 'married', 'Bahamas The', 'rt4t', 0, 1, 1, '', '', 22, 650, 0, 0, 0),
+(10, '', 111111, '111123', 'female', 'chinese', 'buddist', '2021-02-25', 23, '0123456789', 'fbier@du.com', '', '', 0, '', 'married', 'Bahamas The', 'bnxa', 0, 0, 0, '', '', 25, 450, 0, 0, 0),
+(11, '', 111111, '111123', 'female', 'chinese', 'buddist', '2021-02-25', 23, '0123456789', 'fbier@du.com', '', '', 0, '', 'married', 'Algeria', 'bnxa', 0, 0, 0, '', '', 26, 300, 0, 0, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `employee_allowance_deduction_bik`
+--
+
+CREATE TABLE `employee_allowance_deduction_bik` (
+  `adodbik_id` int(50) NOT NULL,
+  `adodbik_type` varchar(30) NOT NULL,
+  `adodbik_code` varchar(40) NOT NULL,
+  `adodbik_description` varchar(255) NOT NULL,
+  `adodbik_startperiod` varchar(30) NOT NULL,
+  `adodbik_endperiod` varchar(30) NOT NULL,
+  `adodbik_amount` int(20) NOT NULL,
+  `adodbik_payepf` tinyint(1) NOT NULL,
+  `adodbik_paysocsoeis` tinyint(1) NOT NULL,
+  `adodbik_paytax` tinyint(1) NOT NULL,
+  `adodbik_payhdrf` tinyint(1) NOT NULL,
+  `adodbik_isfixed` tinyint(1) NOT NULL,
+  `emp_id` int(50) NOT NULL,
+  `userID` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `employee_allowance_deduction_bik`
+--
+
+INSERT INTO `employee_allowance_deduction_bik` (`adodbik_id`, `adodbik_type`, `adodbik_code`, `adodbik_description`, `adodbik_startperiod`, `adodbik_endperiod`, `adodbik_amount`, `adodbik_payepf`, `adodbik_paysocsoeis`, `adodbik_paytax`, `adodbik_payhdrf`, `adodbik_isfixed`, `emp_id`, `userID`) VALUES
+(1, 'bik', 'B-001', 'Qaz', '2021-02-01', '2021-02-28', 200, 0, 0, 0, 0, 0, 29, 0),
+(2, 'allowance', 'FOOD', 'ALLOWANCE', '2021-02-25', '2021-02-28', 100, 0, 1, 1, 0, 0, 0, 3),
+(3, 'bik', 'BONUS', 'AAA', '2021-02-22', '2021-02-26', 10, 0, 0, 0, 0, 0, 0, 3),
+(4, 'allowance', '009', 'aaa', '2021-03-04', '2021-03-28', 80, 0, 1, 1, 0, 0, 0, 42),
+(5, 'optimaldedcution', '08', 'bbb', '2021-03-04', '2021-03-28', 90, 0, 0, 0, 0, 0, 0, 42);
 
 -- --------------------------------------------------------
 
@@ -997,8 +1840,21 @@ CREATE TABLE `employment_detail` (
   `empdet_join_date` date NOT NULL,
   `empdet_confirm_date` date NOT NULL,
   `empdet_resign_date` date NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `employment_detail`
+--
+
+INSERT INTO `employment_detail` (`empdet_ID`, `empdet_director_fee`, `empdet_work_calendar`, `empdet_employee_group`, `empdet_overtime_rate`, `empdet_project_assigned`, `empdet_branch`, `empdet_working_permit_date`, `empdet_join_date`, `empdet_confirm_date`, `empdet_resign_date`, `emp_id`, `userID`) VALUES
+(1, '500', 'test1', 'test1', 'test2', 'test2', 'others', '2021-01-12', '2021-01-14', '0000-00-00', '0000-00-00', 29, 0),
+(2, '800', 'others', 'others', 'test2', 'others', 'others', '2021-02-25', '2021-02-25', '2021-02-25', '0000-00-00', NULL, 42),
+(4, '800', 'others', 'others', 'test2', 'others', 'others', '2021-02-25', '2021-02-25', '2021-02-25', '0000-00-00', NULL, 42),
+(5, '800', 'others', 'others', 'test2', 'others', 'others', '2021-02-25', '2021-02-25', '2021-02-25', '0000-00-00', NULL, 42),
+(6, '800', 'others', 'others', 'test2', 'others', 'others', '2021-02-25', '2021-02-25', '2021-02-25', '0000-00-00', NULL, 42),
+(7, '800', 'others', 'others', 'test2', 'others', 'others', '2021-02-25', '2021-02-25', '2021-02-25', '0000-00-00', NULL, 42);
 
 -- --------------------------------------------------------
 
@@ -1009,11 +1865,23 @@ CREATE TABLE `employment_detail` (
 CREATE TABLE `epf` (
   `epf_id` int(11) NOT NULL,
   `epf_table` varchar(15) NOT NULL,
+  `epf_number` varchar(255) NOT NULL,
   `epf_initial` varchar(10) NOT NULL,
   `epf_nk` varchar(20) NOT NULL,
   `epf_employer_borne` tinyint(1) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `epf`
+--
+
+INSERT INTO `epf` (`epf_id`, `epf_table`, `epf_number`, `epf_initial`, `epf_nk`, `epf_employer_borne`, `emp_id`, `userID`) VALUES
+(1, 'test2', '111', 'IN-10', 'NK-40', 1, 29, 0),
+(2, 'test2', '99999', '00000', 'iiiiii', 0, NULL, 42),
+(3, 'test2', '99999', '00000', 'iiiiii', 0, NULL, 42),
+(5, 'test2', '99999', '00000', 'iiiiii', 0, NULL, 42);
 
 -- --------------------------------------------------------
 
@@ -1080,11 +1948,24 @@ INSERT INTO `group_member` (`group_member_id`, `member_id`, `group_id`, `create_
 CREATE TABLE `income_tax` (
   `incometax_id` int(11) NOT NULL,
   `incometax_status` varchar(15) NOT NULL,
+  `incometax_number` varchar(255) NOT NULL,
   `incometax_branch` varchar(20) NOT NULL,
-  `incometax_ea_serial_num` int(10) NOT NULL,
+  `incometax_ea_serial_num` varchar(255) NOT NULL,
   `incometax_borne_employer` tinyint(1) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `income_tax`
+--
+
+INSERT INTO `income_tax` (`incometax_id`, `incometax_status`, `incometax_number`, `incometax_branch`, `incometax_ea_serial_num`, `incometax_borne_employer`, `emp_id`, `userID`) VALUES
+(1, 'Active', 'T-1900', 'Subang', '0', 1, 29, 0),
+(0, '0000', '999999', 'uuuuuu', '111', 1, NULL, 42),
+(0, '0000', '999999', 'uuuuuu', '111', 1, NULL, 42),
+(0, '0000', '999999', 'uuuuuu', '111', 1, NULL, 42),
+(0, '&lt;br /&gt;&lt', '&lt;br /&gt;&lt;b&gt;Notice&lt;/b&gt;:  Trying to get property &#039;incometax_number&#039; of non-object in &lt;b&gt;C:\\xampp\\htdocs\\Payroll\\Payroll\\empPage.php&lt;/b&gt; on line &lt;b&gt;1580&lt;/b&gt;&lt;br /&gt;', '&lt;br /&gt;&lt;b&gt', '&lt;br /&gt;&lt;b&gt;Notice&lt;/b&gt;:  Trying to get property &#039;incometax_ea_serial_num&#039; of non-object in &lt;b&gt;C:\\xampp\\htdocs\\Payroll\\Payroll\\empPage.php&lt;/b&gt; on line &lt;b&gt;1602&lt;/b&gt;&lt;br /&gt;', 1, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -1121,6 +2002,36 @@ CREATE TABLE `leavebalance` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `leaveinformation`
+--
+
+CREATE TABLE `leaveinformation` (
+  `LeaeinfoID` int(11) NOT NULL,
+  `CutOff` float NOT NULL,
+  `RoundUp` varchar(100) NOT NULL,
+  `Calculation` varchar(100) NOT NULL,
+  `CalculateYOSBy` varchar(100) NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `userID` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `leave_group`
+--
+
+CREATE TABLE `leave_group` (
+  `LeaveGroupID` int(11) NOT NULL,
+  `LeaveType` int(11) NOT NULL,
+  `empLeaveGrpID` int(11) NOT NULL,
+  `ServiceDurationYear` int(11) NOT NULL,
+  `EntitledBalance` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `leave_type`
 --
 
@@ -1130,7 +2041,12 @@ CREATE TABLE `leave_type` (
   `limited` varchar(100) NOT NULL,
   `description` varchar(25) NOT NULL,
   `required_replacement` tinyint(1) NOT NULL,
-  `leave_encashment` tinyint(1) NOT NULL
+  `leave_encashment` tinyint(1) NOT NULL,
+  `EntitlementCalculationMethod` varchar(100) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `ParentID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -1141,10 +2057,22 @@ CREATE TABLE `leave_type` (
 
 CREATE TABLE `levy` (
   `levy_id` int(11) NOT NULL,
-  `levy__desc` varchar(50) NOT NULL,
+  `levy_code` varchar(30) NOT NULL,
+  `levyDesc` varchar(50) NOT NULL,
   `levy_employee_amount` int(12) NOT NULL,
-  `levy_employer_amount` int(12) NOT NULL
+  `levy_employer_amount` int(12) NOT NULL,
+  `date` date NOT NULL,
+  `corporateID` int(11) NOT NULL,
+  `companyID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `levy`
+--
+
+INSERT INTO `levy` (`levy_id`, `levy_code`, `levyDesc`, `levy_employee_amount`, `levy_employer_amount`, `date`, `corporateID`, `companyID`) VALUES
+(1, '1', 'aaaa', 1, 1, '2021-02-21', 1, 3),
+(2, '1', 'bbb', 2, 2, '2021-02-22', 1, 3);
 
 -- --------------------------------------------------------
 
@@ -1154,10 +2082,23 @@ CREATE TABLE `levy` (
 
 CREATE TABLE `levy_employee` (
   `levy_eid` int(11) NOT NULL,
+  `levy_payrolltype` varchar(100) NOT NULL,
   `levy_date` date NOT NULL,
+  `levy_employeeAmount` int(12) NOT NULL,
+  `levy_employerAmount` int(12) NOT NULL,
+  `levy_note` varchar(100) NOT NULL,
   `levy_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `levy_employee`
+--
+
+INSERT INTO `levy_employee` (`levy_eid`, `levy_payrolltype`, `levy_date`, `levy_employeeAmount`, `levy_employerAmount`, `levy_note`, `levy_id`, `emp_id`) VALUES
+(3, 'Second Half/ Month End', '2021-03-28', 90, 50, 'bb', 1, 7),
+(4, 'Second Half/ Month End', '2021-03-26', 90, 90, 'cc', 1, 7),
+(5, 'Second Half/ Month End', '2021-04-22', 80, 80, '', 1, 7);
 
 -- --------------------------------------------------------
 
@@ -1167,9 +2108,21 @@ CREATE TABLE `levy_employee` (
 
 CREATE TABLE `loan` (
   `loan_id` int(11) NOT NULL,
-  `loan_desc` varchar(50) NOT NULL,
-  `loan_interest` double(3,2) NOT NULL
+  `loan_code` varchar(30) NOT NULL,
+  `loanDesc` varchar(50) NOT NULL,
+  `loan_interest` double(3,2) NOT NULL,
+  `date` date NOT NULL,
+  `corporateID` int(11) NOT NULL,
+  `companyID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `loan`
+--
+
+INSERT INTO `loan` (`loan_id`, `loan_code`, `loanDesc`, `loan_interest`, `date`, `corporateID`, `companyID`) VALUES
+(1, '1', 'bbb', 3.00, '2021-02-21', 1, 3),
+(2, '3', 'uuuu', 1.00, '2021-02-22', 1, 3);
 
 -- --------------------------------------------------------
 
@@ -1179,11 +2132,22 @@ CREATE TABLE `loan` (
 
 CREATE TABLE `loan_employee` (
   `loan_eid` int(11) NOT NULL,
+  `loan_payrolltype` varchar(100) NOT NULL,
   `loan_amount` double(12,2) NOT NULL,
   `loan_date` date NOT NULL,
+  `loan_interest` double(10,2) NOT NULL,
+  `loan_note` varchar(100) NOT NULL,
   `loan_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `loan_employee`
+--
+
+INSERT INTO `loan_employee` (`loan_eid`, `loan_payrolltype`, `loan_amount`, `loan_date`, `loan_interest`, `loan_note`, `loan_id`, `emp_id`) VALUES
+(5, 'Second Half/ Month End', 50.00, '2021-03-26', 50.00, 'cc', 1, 7),
+(6, 'Second Half/ Month End', 50.00, '2021-03-18', 2.00, 'aa', 1, 7);
 
 -- --------------------------------------------------------
 
@@ -1409,7 +2373,93 @@ INSERT INTO `loginlog` (`loginlogid`, `userID`, `corporateID`, `companyID`, `dat
 (206, 3, 1, NULL, '2021-01-12', '08:27:36'),
 (207, 1, NULL, NULL, '2021-01-12', '08:37:38'),
 (0, 7, 1, NULL, '2021-01-14', '10:28:41'),
-(0, 3, 1, NULL, '2021-01-14', '10:31:45');
+(0, 3, 1, NULL, '2021-01-14', '10:31:45'),
+(0, 3, 1, NULL, '2021-01-22', '07:59:31'),
+(0, 3, 1, NULL, '2021-01-23', '14:38:54'),
+(0, 3, 1, NULL, '2021-01-24', '14:47:00'),
+(0, 3, 1, NULL, '2021-01-25', '07:30:33'),
+(0, 3, 1, NULL, '2021-01-26', '07:53:01'),
+(0, 3, 1, NULL, '2021-01-27', '07:44:27'),
+(0, 3, 1, NULL, '2021-01-28', '18:18:05'),
+(0, 3, 1, NULL, '2021-01-29', '08:19:01'),
+(0, 3, 1, NULL, '2021-01-30', '11:14:35'),
+(0, 3, 1, NULL, '2021-01-31', '16:20:19'),
+(0, 3, 1, NULL, '2021-02-01', '07:40:11'),
+(0, 3, 1, NULL, '2021-02-02', '07:53:01'),
+(0, 3, 1, NULL, '2021-02-03', '07:53:09'),
+(0, 3, 1, NULL, '2021-02-04', '07:40:58'),
+(0, 3, 1, NULL, '2021-02-05', '07:54:07'),
+(0, 3, 1, NULL, '2021-02-06', '20:42:32'),
+(0, 3, 1, NULL, '2021-02-07', '09:39:54'),
+(0, 3, 1, NULL, '2021-02-08', '07:51:48'),
+(0, 3, 1, NULL, '2021-02-09', '07:40:37'),
+(0, 3, 1, NULL, '2021-02-10', '07:26:16'),
+(0, 3, 1, NULL, '2021-02-11', '07:19:15'),
+(0, 3, 1, NULL, '2021-02-13', '14:21:21'),
+(0, 3, 1, NULL, '2021-02-14', '21:19:09'),
+(0, 3, 1, NULL, '2021-02-15', '07:53:33'),
+(0, 3, 1, NULL, '2021-02-16', '07:45:28'),
+(0, 7, 1, NULL, '2021-02-16', '10:50:28'),
+(0, 3, 1, NULL, '2021-02-17', '08:00:03'),
+(0, 7, 1, NULL, '2021-02-17', '15:49:02'),
+(0, 3, 1, NULL, '2021-02-18', '07:52:54'),
+(0, 4, 3, NULL, '2021-02-18', '08:42:51'),
+(0, 7, 1, NULL, '2021-02-18', '08:43:54'),
+(0, 3, 1, NULL, '2021-02-19', '07:40:31'),
+(0, 3, 1, NULL, '2021-02-20', '07:40:15'),
+(0, 3, 1, NULL, '2021-02-21', '11:04:04'),
+(0, 3, 1, NULL, '2021-02-22', '07:39:00'),
+(0, 7, 1, NULL, '2021-02-22', '21:28:54'),
+(0, 3, 1, NULL, '2021-02-23', '08:28:36'),
+(0, 3, 1, NULL, '2021-02-24', '07:36:22'),
+(0, 3, 1, NULL, '2021-02-25', '07:56:18'),
+(0, 3, 1, NULL, '2021-02-26', '07:26:15'),
+(0, 3, 1, NULL, '2021-02-27', '12:02:52'),
+(0, 3, 1, NULL, '2021-03-01', '07:49:06'),
+(0, 7, 1, NULL, '2021-03-01', '08:40:19'),
+(0, 3, 1, NULL, '2021-03-02', '07:27:54'),
+(0, 7, 1, NULL, '2021-03-02', '08:23:41'),
+(0, 3, 1, NULL, '2021-03-03', '07:35:45'),
+(0, 7, 1, NULL, '2021-03-03', '08:57:17'),
+(0, 3, 1, NULL, '2021-03-04', '08:06:02'),
+(0, 7, 1, NULL, '2021-03-04', '08:13:08'),
+(0, 3, 1, NULL, '2021-03-05', '07:29:14'),
+(0, 3, 1, NULL, '2021-03-08', '07:03:34'),
+(0, 3, 1, NULL, '2021-03-09', '07:08:14'),
+(0, 3, 1, NULL, '2021-03-10', '07:08:43'),
+(0, 3, 1, NULL, '2021-03-11', '07:05:10'),
+(0, 3, 1, NULL, '2021-03-12', '07:54:33'),
+(0, 3, 1, NULL, '2021-03-15', '06:53:30'),
+(0, 3, 1, NULL, '2021-03-16', '06:57:26'),
+(0, 3, 1, NULL, '2021-03-17', '06:47:05'),
+(0, 3, 1, NULL, '2021-03-18', '06:50:06'),
+(0, 3, 1, NULL, '2021-03-19', '06:13:59'),
+(0, 3, 1, NULL, '2021-03-22', '06:33:05'),
+(0, 3, 1, NULL, '2021-03-23', '06:01:21'),
+(0, 3, 1, NULL, '2021-03-24', '05:53:50'),
+(0, 3, 1, NULL, '2021-03-25', '05:50:11'),
+(0, 3, 1, NULL, '2021-03-26', '07:01:54'),
+(0, 3, 1, NULL, '2021-03-28', '20:56:40'),
+(0, 3, 1, NULL, '2021-03-29', '07:54:05'),
+(0, 3, 1, NULL, '2021-03-30', '07:58:08'),
+(0, 3, 1, NULL, '2021-03-31', '07:51:35'),
+(0, 3, 1, NULL, '2021-04-01', '06:10:42'),
+(0, 3, 1, NULL, '2021-04-02', '05:57:22'),
+(0, 3, 1, NULL, '2021-04-05', '06:08:29'),
+(0, 3, 1, NULL, '2021-04-06', '08:05:59'),
+(0, 3, 1, NULL, '2021-04-07', '05:42:16'),
+(0, 3, 1, NULL, '2021-04-08', '05:44:06'),
+(0, 3, 1, NULL, '2021-04-09', '05:32:23'),
+(0, 3, 1, NULL, '2021-04-10', '22:19:05'),
+(0, 3, 1, NULL, '2021-04-12', '05:57:05'),
+(0, 3, 1, NULL, '2021-04-13', '05:52:34'),
+(0, 3, 1, NULL, '2021-04-14', '05:54:56'),
+(0, 3, 1, NULL, '2021-04-16', '05:53:54'),
+(0, 3, 1, NULL, '2021-04-17', '22:43:03'),
+(0, 3, 1, NULL, '2021-04-18', '17:34:49'),
+(0, 7, 1, NULL, '2021-04-18', '21:11:15'),
+(0, 3, 1, NULL, '2021-04-19', '06:18:50'),
+(0, 7, 1, NULL, '2021-04-19', '13:27:00');
 
 -- --------------------------------------------------------
 
@@ -1482,34 +2532,136 @@ INSERT INTO `noosuserchange` (`noosuserchangeid`, `corporateID`, `companyID`, `t
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `optional_deduction`
+--
+
+CREATE TABLE `optional_deduction` (
+  `OptionalDeduction_id` int(255) NOT NULL,
+  `OptionalDeduction_Desc` varchar(255) NOT NULL,
+  `OptionalDeduction_maxamount` int(255) NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `optional_deduction`
+--
+
+INSERT INTO `optional_deduction` (`OptionalDeduction_id`, `OptionalDeduction_Desc`, `OptionalDeduction_maxamount`, `companyID`, `corporateID`) VALUES
+(1, 'Medical Expenses of Own Parents', 5000, 0, 1),
+(2, 'Basic Supporting Equipment', 6000, 0, 0),
+(3, 'Higher Education Fees (Self)', 7000, 0, 0),
+(4, 'Medical expenses on serious diseases\r\n', 6000, 0, 0),
+(5, 'Complete Medical Examination', 500, 0, 0),
+(6, 'Deposits in Skim Simpanan Pendidikan Nasional (SSPN) account', 6000, 0, 0),
+(7, 'Contribution to the Social Security Organization (SOCSO)', 250, 0, 0),
+(8, 'Deduction for parents', 3000, 0, 0),
+(9, 'Lifestyle relief', 2500, 0, 0),
+(10, 'Purchase of breastfeeding equipment', 1000, 0, 0),
+(11, 'Child care centre and pre-school fees', 1000, 0, 0),
+(12, 'Interest on housing loan\r\n', 0, 0, 0),
+(13, 'Deduction for wife and payment of alimony to former wife', 4000, 0, 0),
+(14, 'Deduction for husband', 4000, 0, 0),
+(15, 'Deduction for insurance premiums and contribution to an approved scheme\r\n', 6000, 0, 0),
+(16, 'Premium for deferred annuity and contribution to private retirement scheme ', 3000, 0, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `optional_deduction_employee`
+--
+
+CREATE TABLE `optional_deduction_employee` (
+  `OptionalDeduction_eid` int(255) NOT NULL,
+  `OptionalDeduction_payrolltype` int(11) NOT NULL,
+  `OptionalDeduction_id` int(255) NOT NULL,
+  `emp_id` int(255) NOT NULL,
+  `OptionalDeduction_amount` int(255) NOT NULL,
+  `OptionalDeduction_date` date NOT NULL,
+  `OptionalDeduction_note` varchar(250) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `optional_deduction_employee`
+--
+
+INSERT INTO `optional_deduction_employee` (`OptionalDeduction_eid`, `OptionalDeduction_payrolltype`, `OptionalDeduction_id`, `emp_id`, `OptionalDeduction_amount`, `OptionalDeduction_date`, `OptionalDeduction_note`) VALUES
+(2, 0, 1, 7, 70, '2021-03-18', 'aa'),
+(3, 0, 1, 7, 90, '2021-03-19', 'aa');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `other`
 --
 
 CREATE TABLE `other` (
   `other_id` int(20) NOT NULL,
-  `zakat_num` int(20) NOT NULL,
+  `zakat_num` varchar(50) NOT NULL,
   `zakat_amount` int(20) NOT NULL,
-  `tabung_haji_num` int(20) NOT NULL,
+  `tabung_haji_num` varchar(50) NOT NULL,
   `tabung_haji_amount` int(20) NOT NULL,
-  `asn_number` int(20) NOT NULL,
+  `asn_number` varchar(50) NOT NULL,
   `asn_amount` int(20) NOT NULL,
-  `foreign_worker_levy` int(20) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `foreign_worker_levy` varchar(50) NOT NULL,
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `other`
+--
+
+INSERT INTO `other` (`other_id`, `zakat_num`, `zakat_amount`, `tabung_haji_num`, `tabung_haji_amount`, `asn_number`, `asn_amount`, `foreign_worker_levy`, `emp_id`, `userID`) VALUES
+(1, '222', 999, '888', 717, '122', 212, '111', 29, 0),
+(3, '', 0, '', 0, '', 0, '', 33, 0),
+(4, '', 0, '', 0, '', 0, '', 28, 0),
+(6, '', 0, '', 0, '', 0, '', NULL, 43),
+(0, '', 0, '', 0, '', 0, '', NULL, 7),
+(0, '', 0, '', 0, '', 0, '', NULL, 22),
+(0, '', 0, '', 0, '', 0, '', NULL, 3),
+(0, '', 0, '', 0, '', 0, '', NULL, 3),
+(0, '', 0, '', 0, '', 0, '', NULL, 42),
+(0, '', 0, '', 0, '', 0, '', NULL, 42),
+(0, '', 0, '', 0, '', 0, '', NULL, 42),
+(0, '', 0, '', 0, '', 0, '', NULL, 42),
+(0, '', 0, '', 0, '', 0, '', NULL, 42),
+(0, '', 0, '', 0, '', 0, '', NULL, 41),
+(0, '', 0, '', 0, '', 0, '', NULL, 4),
+(0, '&lt;br /&gt;&lt;b&gt;Notice&lt;/b&gt;:  Trying to ', 0, '&lt;br /&gt;&lt;b&gt;Notice&lt;/b&gt;:  Trying to ', 0, '&lt;br /&gt;&lt;b&gt;Notice&lt;/b&gt;:  Trying to ', 0, '&lt;br /&gt;&lt;b&gt;Notice&lt;/b&gt;:  Trying to ', NULL, 0);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `other_info`
+-- Table structure for table `other_information`
 --
 
-CREATE TABLE `other_info` (
-  `otherinfo_id` int(11) NOT NULL,
-  `otherinfo_education` varchar(300) NOT NULL,
-  `otherinfo_experience` varchar(300) NOT NULL,
-  `otherinfo_files` longblob NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+CREATE TABLE `other_information` (
+  `otherinfo_id` int(20) NOT NULL,
+  `otherinfo_education` varchar(255) NOT NULL,
+  `otherinfo_pastexperiences` varchar(255) NOT NULL,
+  `emp_id` int(20) NOT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `other_information`
+--
+
+INSERT INTO `other_information` (`otherinfo_id`, `otherinfo_education`, `otherinfo_pastexperiences`, `emp_id`, `userID`) VALUES
+(3, ' &gt;1111', ' &gt;111', 29, 0),
+(4, '                                                                                                                                                                                                        ', '                                                                                                                                                                                                        ', 0, 43),
+(5, '                                                                                                                                                          spm                                                                                                  ', '                                                                                                                                            no                                                                                                                 ', 0, 7),
+(6, '                                                                                                    ', '                                                                                                    ', 0, 22),
+(7, '                                                                                                    ', '                                                                                                    ', 0, 3),
+(8, '                                                                                                    ', '                                                                                                    ', 0, 3),
+(9, '                                                                                                                                                                                                                                                               ', '                                                                                                                                                                                                                                                               ', 0, 42),
+(12, '                                                                                                                                                                                                                                                               ', '                                                                                                                                                                                                                                                               ', 0, 42),
+(13, '                                                                                                                                                                                                                                                               ', '                                                                                                                                                                                                                                                               ', 0, 42),
+(14, '                                                                                                                                                                                                                                                               ', '                                                                                                                                                                                                                                                               ', 0, 42),
+(15, '                                                                                                                                                                                                                                                               ', '                                                                                                                                                                                                                                                               ', 0, 42),
+(16, '                                                                                                                                                                                                        ', '                                                                                                                                                                                                        ', 0, 41),
+(17, '                                                                                                    ', '                                                                                                    ', 0, 4);
 
 -- --------------------------------------------------------
 
@@ -1519,13 +2671,24 @@ CREATE TABLE `other_info` (
 
 CREATE TABLE `overtime` (
   `overtime_id` int(11) NOT NULL,
+  `overtime_code` varchar(30) NOT NULL,
   `overtimeDesc` varchar(50) NOT NULL,
-  `pay_EPF` tinyint(1) NOT NULL,
-  `pay_SOCSOEIS` tinyint(1) NOT NULL,
-  `pay_TAX` tinyint(1) NOT NULL,
-  `overtimeDate` date NOT NULL,
-  `overtimeFormula` varchar(50) NOT NULL
+  `payEPF` tinyint(1) NOT NULL,
+  `paySOCSOEIS` tinyint(1) NOT NULL,
+  `payTAX` tinyint(1) NOT NULL,
+  `date` date NOT NULL,
+  `formula` varchar(50) NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `overtime`
+--
+
+INSERT INTO `overtime` (`overtime_id`, `overtime_code`, `overtimeDesc`, `payEPF`, `paySOCSOEIS`, `payTAX`, `date`, `formula`, `companyID`, `corporateID`) VALUES
+(2, '1', 'Monthly pay- Rest Day', 0, 1, 1, '0000-00-00', 'h', 0, 1),
+(3, '4', 'aaa', 0, 1, 0, '2021-02-22', 'h', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -1535,11 +2698,26 @@ CREATE TABLE `overtime` (
 
 CREATE TABLE `overtime_employee` (
   `overtime_eid` int(11) NOT NULL,
+  `overtime_payrolltype` varchar(100) NOT NULL,
   `overtimeAmount` double(12,2) NOT NULL,
   `overtime_date` date NOT NULL,
+  `overtime_epf` tinyint(3) NOT NULL,
+  `overtime_socsoeis` tinyint(3) NOT NULL,
+  `overtime_tax` tinyint(3) NOT NULL,
+  `overtime_note` varchar(100) NOT NULL,
   `overtime_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `overtime_employee`
+--
+
+INSERT INTO `overtime_employee` (`overtime_eid`, `overtime_payrolltype`, `overtimeAmount`, `overtime_date`, `overtime_epf`, `overtime_socsoeis`, `overtime_tax`, `overtime_note`, `overtime_id`, `emp_id`) VALUES
+(3, 'Second Half/ Month End', 80.00, '2021-02-26', 0, 0, 0, 'aaaaaaaa', 2, 7),
+(4, 'Second Half/ Month End', 20.00, '2021-04-22', 0, 0, 0, 'vvvvvv', 2, 7),
+(5, 'Second Half/ Month End', 70.00, '2021-02-20', 1, 1, 1, 'aaaaa', NULL, 23),
+(6, 'Second Half/ Month End', 90.00, '2021-02-17', 0, 1, 1, 'kk', 2, 3);
 
 -- --------------------------------------------------------
 
@@ -1548,12 +2726,24 @@ CREATE TABLE `overtime_employee` (
 --
 
 CREATE TABLE `parrears` (
-  `pArrears_id` int(11) NOT NULL,
-  `pArrearsDesc` varchar(50) NOT NULL,
-  `payepf` tinyint(1) NOT NULL,
-  `paySOCSO_EIS` tinyint(1) NOT NULL,
-  `pay_Tax` tinyint(1) NOT NULL
+  `parrears_id` int(11) NOT NULL,
+  `parrears_code` varchar(30) NOT NULL,
+  `parrearsDesc` varchar(50) NOT NULL,
+  `payEPF` tinyint(1) NOT NULL,
+  `paySOCSOEIS` tinyint(1) NOT NULL,
+  `payTAX` tinyint(1) NOT NULL,
+  `date` date NOT NULL,
+  `companyID` int(11) NOT NULL,
+  `corporateID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `parrears`
+--
+
+INSERT INTO `parrears` (`parrears_id`, `parrears_code`, `parrearsDesc`, `payEPF`, `paySOCSOEIS`, `payTAX`, `date`, `companyID`, `corporateID`) VALUES
+(2, '', '', 0, 0, 0, '0000-00-00', 0, 1),
+(3, '3', 'aaaa', 1, 1, 1, '2021-02-22', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -1563,11 +2753,53 @@ CREATE TABLE `parrears` (
 
 CREATE TABLE `parrears_employee` (
   `pArrears_eid` int(11) NOT NULL,
+  `pArrears_payrolltype` int(11) NOT NULL,
   `pArrearsAmount` double(12,2) NOT NULL,
   `pArrearsDate` date NOT NULL,
+  `pArrears_epf` tinyint(3) NOT NULL,
+  `pArrears_socsoeis` tinyint(3) NOT NULL,
+  `pArrears_tax` tinyint(3) NOT NULL,
+  `pArrears_note` varchar(100) NOT NULL,
   `pArrears_id` int(11) DEFAULT NULL,
   `emp_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `parrears_employee`
+--
+
+INSERT INTO `parrears_employee` (`pArrears_eid`, `pArrears_payrolltype`, `pArrearsAmount`, `pArrearsDate`, `pArrears_epf`, `pArrears_socsoeis`, `pArrears_tax`, `pArrears_note`, `pArrears_id`, `emp_id`) VALUES
+(5, 0, 50.00, '2021-02-26', 1, 1, 1, 'aaaa', NULL, 7),
+(6, 0, 50.00, '2021-02-20', 1, 1, 1, 'ccccc', 2, 7),
+(9, 0, 70.00, '2021-02-19', 1, 1, 0, 'aaaaa', NULL, 23),
+(10, 0, 90.00, '2021-02-18', 1, 1, 1, 'cccc', 2, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payinfo`
+--
+
+CREATE TABLE `payinfo` (
+  `payinfo_id` int(255) NOT NULL,
+  `payinfo_job_title` varchar(255) NOT NULL,
+  `payinfo_department` varchar(255) NOT NULL,
+  `payinfo_superior` varchar(255) NOT NULL,
+  `payinfo_emptype` varchar(255) NOT NULL,
+  `payinfo_wagetype` varchar(255) NOT NULL,
+  `payinfo_basicrate` varchar(255) NOT NULL,
+  `payinfo_payfrequency` varchar(255) NOT NULL,
+  `payinfo_paymentby` varchar(255) NOT NULL,
+  `payinfo_bankpayout` varchar(255) NOT NULL,
+  `emp_id` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `payinfo`
+--
+
+INSERT INTO `payinfo` (`payinfo_id`, `payinfo_job_title`, `payinfo_department`, `payinfo_superior`, `payinfo_emptype`, `payinfo_wagetype`, `payinfo_basicrate`, `payinfo_payfrequency`, `payinfo_paymentby`, `payinfo_bankpayout`, `emp_id`) VALUES
+(1, 'dwadwa', 'dwadwa', 'dwadwa', 'dwadwa', 'dwadwa', '1200', '', '', '', 3);
 
 -- --------------------------------------------------------
 
@@ -1577,9 +2809,66 @@ CREATE TABLE `parrears_employee` (
 
 CREATE TABLE `payroll_history` (
   `payroll_history_id` int(11) NOT NULL,
-  `payroll_date` date NOT NULL,
-  `payroll_id` int(11) DEFAULT NULL
+  `payroll_period` varchar(50) NOT NULL,
+  `payroll_type` varchar(50) NOT NULL,
+  `leavecutoffdate` date DEFAULT NULL,
+  `employeecount` int(10) NOT NULL,
+  `payrollDesc` varchar(255) NOT NULL,
+  `committed` tinyint(1) DEFAULT NULL,
+  `corporateID` int(11) DEFAULT NULL,
+  `companyID` int(11) DEFAULT NULL,
+  `payroll_date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `payroll_history`
+--
+
+INSERT INTO `payroll_history` (`payroll_history_id`, `payroll_period`, `payroll_type`, `leavecutoffdate`, `employeecount`, `payrollDesc`, `committed`, `corporateID`, `companyID`, `payroll_date`) VALUES
+(21, 'February 2020', 'Month End/Second Half', '2020-02-29', 3, 'february 2020', 0, 1, 3, '2021-03-18'),
+(22, 'March 2020', 'Month End/Second Half', '2020-03-31', 3, 'march 2021', 0, 1, 3, '2021-03-22'),
+(23, 'January 2020', 'Month End/Second Half', '2020-01-31', 3, 'january 2020', 0, 1, 3, '2021-03-22'),
+(25, 'January 2021', 'Month End/Second Half', '2021-01-31', 1, '', 0, 1, 13, '2021-03-30'),
+(26, 'March 2021', 'Month End/Second Half', '2021-03-31', 1, '', 0, 1, 13, '2021-03-30'),
+(27, 'March 2021', 'Month End/Second Half', '2021-03-31', 3, '', 0, 1, 3, '2021-03-01'),
+(28, 'April 2021', 'Month End/Second Half', '2021-04-30', 3, 'aprill 2020', 0, 1, 3, '2021-04-01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payroll_info`
+--
+
+CREATE TABLE `payroll_info` (
+  `payinfo_id` int(255) NOT NULL,
+  `payinfo_job_title` varchar(255) NOT NULL,
+  `payinfo_department` varchar(255) NOT NULL,
+  `payinfo_superior` varchar(255) NOT NULL,
+  `payinfo_emptype` varchar(255) NOT NULL,
+  `payinfo_wagetype` varchar(255) NOT NULL,
+  `payinfo_basicrate` varchar(255) NOT NULL,
+  `payinfo_payfrequency` varchar(255) NOT NULL,
+  `payinfo_paymentby` varchar(255) NOT NULL,
+  `payinfo_bankpayout` varchar(255) NOT NULL,
+  `emp_id` int(20) NOT NULL,
+  `userID` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `payroll_info`
+--
+
+INSERT INTO `payroll_info` (`payinfo_id`, `payinfo_job_title`, `payinfo_department`, `payinfo_superior`, `payinfo_emptype`, `payinfo_wagetype`, `payinfo_basicrate`, `payinfo_payfrequency`, `payinfo_paymentby`, `payinfo_bankpayout`, `emp_id`, `userID`) VALUES
+(1, '123', 'test2', 'test1', 'test1', 'test2', '6000', 'daily', 'test1', 'others', 29, 0),
+(2, 'Test1', 'test1', 'test2', 'test2', 'test2', '2000', 'monthly', 'test2', 'test1', 0, 43),
+(3, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42),
+(6, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42),
+(7, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42),
+(8, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42),
+(9, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42),
+(10, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42),
+(11, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42),
+(12, 'sogk', 'test2', 'test2', 'test2', 'others', '900', 'monthly', 'test2', 'test2', 0, 42);
 
 -- --------------------------------------------------------
 
@@ -1589,39 +2878,40 @@ CREATE TABLE `payroll_history` (
 
 CREATE TABLE `payslip` (
   `payslip_id` int(11) NOT NULL,
-  `payslipDate` date NOT NULL,
+  `payroll_type` varchar(50) NOT NULL,
+  `payslipDate` varchar(255) NOT NULL,
   `emp_id` int(11) DEFAULT NULL,
-  `basicSalary` varchar(20) NOT NULL,
-  `allowance` varchar(20) NOT NULL,
-  `overtime` varchar(20) NOT NULL,
-  `commission` varchar(20) NOT NULL,
-  `bonus` varchar(20) NOT NULL,
-  `directorFee` varchar(20) NOT NULL,
-  `paidLEave` varchar(20) NOT NULL,
-  `claim` varchar(20) NOT NULL,
-  `pArrears` varchar(20) NOT NULL,
-  `deduction` varchar(20) NOT NULL,
-  `advance` varchar(20) NOT NULL,
-  `empEpf` varchar(20) NOT NULL,
-  `empSocso` varchar(20) NOT NULL,
-  `empEis` varchar(20) NOT NULL,
-  `pcb` varchar(20) NOT NULL,
-  `cp38` varchar(20) NOT NULL,
-  `unpaidLeave` varchar(20) NOT NULL,
-  `zakat` varchar(20) NOT NULL,
-  `empLevy` varchar(20) NOT NULL,
-  `loan` varchar(20) NOT NULL,
-  `asn` varchar(20) NOT NULL,
-  `tabung` varchar(20) NOT NULL,
-  `bik` varchar(20) NOT NULL,
-  `comEpf` varchar(20) NOT NULL,
-  `comEis` varchar(20) NOT NULL,
-  `comLevy` varchar(20) NOT NULL,
-  `comSocso` varchar(20) NOT NULL,
-  `optionalDeduction` varchar(20) NOT NULL,
-  `empPaidZakat` varchar(20) NOT NULL,
-  `departureLevy` varchar(20) NOT NULL,
-  `DaysnotWorked` varchar(20) NOT NULL
+  `basicSalary` varchar(255) NOT NULL,
+  `allowance` varchar(255) NOT NULL,
+  `overtime` varchar(255) NOT NULL,
+  `commission` varchar(255) NOT NULL,
+  `bonus` varchar(255) NOT NULL,
+  `directorFee` varchar(255) NOT NULL,
+  `paidLEave` varchar(255) NOT NULL,
+  `claim` varchar(255) NOT NULL,
+  `pArrears` varchar(255) NOT NULL,
+  `deduction` varchar(255) NOT NULL,
+  `advance` varchar(255) NOT NULL,
+  `empEpf` varchar(255) NOT NULL,
+  `empSocso` varchar(255) NOT NULL,
+  `empEis` varchar(255) NOT NULL,
+  `pcb` varchar(255) NOT NULL,
+  `cp38` varchar(255) NOT NULL,
+  `unpaidLeave` varchar(255) NOT NULL,
+  `zakat` varchar(255) NOT NULL,
+  `empLevy` varchar(255) NOT NULL,
+  `loan` varchar(255) NOT NULL,
+  `asn` varchar(255) NOT NULL,
+  `tabung` varchar(255) NOT NULL,
+  `bik` varchar(255) NOT NULL,
+  `comEpf` varchar(255) NOT NULL,
+  `comEis` varchar(255) NOT NULL,
+  `comLevy` varchar(255) NOT NULL,
+  `comSocso` varchar(255) NOT NULL,
+  `optionalDeduction` varchar(255) NOT NULL,
+  `empPaidZakat` varchar(255) NOT NULL,
+  `departureLevy` varchar(255) NOT NULL,
+  `DaysnotWorked` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -1725,13 +3015,25 @@ INSERT INTO `plan_tags` (`tagID`, `tagname`, `category`, `userID`) VALUES
 
 CREATE TABLE `socso` (
   `socso_id` int(11) NOT NULL,
-  `socso_category` varchar(15) NOT NULL,
-  `socso_employment_status` varchar(15) NOT NULL,
+  `socso_category` varchar(255) NOT NULL,
+  `socso_number` varchar(255) NOT NULL,
+  `socso_employement_status` varchar(255) NOT NULL,
   `socso_employer_borne` tinyint(1) NOT NULL,
   `socso_contribute_eis` tinyint(1) NOT NULL,
-  `socso_eis_employer_borne` tinyint(1) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `socso_employer_eis` tinyint(1) NOT NULL,
+  `emp_id` int(11) DEFAULT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `socso`
+--
+
+INSERT INTO `socso` (`socso_id`, `socso_category`, `socso_number`, `socso_employement_status`, `socso_employer_borne`, `socso_contribute_eis`, `socso_employer_eis`, `emp_id`, `userID`) VALUES
+(1, 'test1', 'M-100', 'Active', 1, 1, 0, 29, 0),
+(2, 'test2', '90909', 'ACTIVE', 0, 1, 0, NULL, 42),
+(3, 'test2', '90909', 'ACTIVE', 0, 1, 0, NULL, 42),
+(5, 'test2', '90909', 'ACTIVE', 0, 1, 0, NULL, 42);
 
 -- --------------------------------------------------------
 
@@ -1741,19 +3043,62 @@ CREATE TABLE `socso` (
 
 CREATE TABLE `spouse` (
   `spouse_id` int(11) NOT NULL,
-  `spouse_name` varchar(50) NOT NULL,
-  `spouse_ic_num` int(12) NOT NULL,
-  `spouse_passport_num` char(20) NOT NULL,
-  `spouse_num_tax_deductable_child` int(2) NOT NULL,
+  `spouse_name` varchar(255) NOT NULL,
+  `spouse_ic` varchar(12) NOT NULL,
+  `spouse_passport` varchar(30) NOT NULL,
+  `spouse_num_of_child` int(10) NOT NULL,
+  `spouse_deducted_amount` int(50) NOT NULL,
+  `spouse_is_disabled` tinyint(1) NOT NULL,
   `spouse_work_status` tinyint(1) NOT NULL,
-  `spouse_tax_num` int(20) NOT NULL,
-  `spouse_phone_num` char(15) NOT NULL,
-  `spouse_address_street` varchar(100) NOT NULL,
-  `spouse_address_state` varchar(20) NOT NULL,
-  `spouse_address_postcode` int(7) NOT NULL,
-  `spouse_address_city` varchar(20) NOT NULL,
-  `emp_id` int(11) DEFAULT NULL
+  `spouse_tax_num` varchar(50) NOT NULL,
+  `spouse_phonenum` varchar(20) NOT NULL,
+  `spouse_address_street` varchar(255) NOT NULL,
+  `spouse_address_state` varchar(255) NOT NULL,
+  `spouse_address_postcode` varchar(255) NOT NULL,
+  `spouse_address_city` varchar(255) NOT NULL,
+  `emp_id` int(20) NOT NULL,
+  `userID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `spouse`
+--
+
+INSERT INTO `spouse` (`spouse_id`, `spouse_name`, `spouse_ic`, `spouse_passport`, `spouse_num_of_child`, `spouse_deducted_amount`, `spouse_is_disabled`, `spouse_work_status`, `spouse_tax_num`, `spouse_phonenum`, `spouse_address_street`, `spouse_address_state`, `spouse_address_postcode`, `spouse_address_city`, `emp_id`, `userID`) VALUES
+(1, 'New2', '000101-20-22', 'P-0909', 2, 2000, 1, 0, 'T-001', '0191123344', '11 New Holiday', 'Cali', '90045', 'Change', 32, 0),
+(2, 'rr', '971134568790', '', 0, 0, 0, 1, '32506681', '0169557008', 'no 48 subang', 'selangor', '28700', 'subang', 0, 42);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `taxexrule`
+--
+
+CREATE TABLE `taxexrule` (
+  `taxex_id` int(11) NOT NULL,
+  `taxrule` varchar(500) NOT NULL,
+  `taxamount` int(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `taxexrule`
+--
+
+INSERT INTO `taxexrule` (`taxex_id`, `taxrule`, `taxamount`) VALUES
+(1, 'Petrol allowance, travelling allowance or toll payment', 6000),
+(2, 'Child care allowance', 2400),
+(3, 'Telephone, mobile phone, pager and PDA', 0),
+(4, 'Monthly bills for broadband, phone, pager and PDA', 0),
+(5, 'Perquisites provided to employee for certain achievement', 2000),
+(6, 'Parking rate and parking allowance', 0),
+(7, 'Meal allowance', 0),
+(8, 'Subsidised interest for housing, education or car loan', 0),
+(9, 'Employers\' own goods provided free or at a discounted value', 1000),
+(10, 'Leave passage for travel outside Malaysia', 3000),
+(11, 'Employers\' own services provided free or at a discounted value', 0),
+(12, 'Medical benefits or dental benefits', 0),
+(13, 'Insurance premiums which are obligatory for foreign workers as a replacement to SOCSO contributions', 0),
+(14, 'Group insurance premium to cover workers in the event of an accident', 0);
 
 -- --------------------------------------------------------
 
@@ -1886,7 +3231,6 @@ INSERT INTO `user` (`userID`, `firstname`, `lastname`, `nickname`, `jobposition`
 (33, 'Jocelyn', 'Ng', '', 'HR and Finance Manager', 0xffd8ffe000104a46494600010101004800480000ffe114a64578696600004d4d002a000000080007011200030000000100010000011a00050000000100000062011b0005000000010000006a0128000300000001000200000131000200000022000000720132000200000014000000948769000400000001000000a8000000d40000004800000001000000480000000141646f62652050686f746f73686f702043432032303135202857696e646f77732900323031383a30323a32332031343a33373a3538000003a001000300000001ffff0000a00200040000000100000258a003000400000001000002580000000000000006010300030000000100060000011a00050000000100000122011b0005000000010000012a01280003000000010002000002010004000000010000013202020004000000010000136c0000000000000048000000010000004800000001ffd8ffed000c41646f62655f434d0002ffee000e41646f626500648000000001ffdb0084000c08080809080c09090c110b0a0b11150f0c0c0f1518131315131318110c0c0c0c0c0c110c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c010d0b0b0d0e0d100e0e10140e0e0e14140e0e0e0e14110c0c0c0c0c11110c0c0c0c0c0c110c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0cffc000110800a000a003012200021101031101ffdd0004000affc4013f0000010501010101010100000000000000030001020405060708090a0b0100010501010101010100000000000000010002030405060708090a0b1000010401030204020507060805030c33010002110304211231054151611322718132061491a1b14223241552c16233347282d14307259253f0e1f163733516a2b283264493546445c2a3743617d255e265f2b384c3d375e3f3462794a485b495c4d4e4f4a5b5c5d5e5f55666768696a6b6c6d6e6f637475767778797a7b7c7d7e7f711000202010204040304050607070605350100021103213112044151617122130532819114a1b14223c152d1f0332462e1728292435315637334f1250616a2b283072635c2d2449354a317644555367465e2f2b384c3d375e3f34694a485b495c4d4e4f4a5b5c5d5e5f55666768696a6b6c6d6e6f62737475767778797a7b7c7ffda000c03010002110311003f00f554924925292492494a4924925292492494a4960757faebd13a5bfd22f7655fafe8b1c0771e3639ccabfe9ae7afff001a56c918fd34000c6eb2ed7fcdaea737ff0005494fa024bcf2bff1a778b3f58c16b2b31ab1c5da7f5bd8bade87f59307acb3f4535dbb776c76a1c38dd53c7b6c6a4a7592492494a4924925292492494a49249253ffd0f554924925292492494a492492521cbcbc6c2c6b32b2ac14d150dcfb1dc01ff9277e63570fd6feb1e77530fa69dd8b8bfb83f9c70ec6f3f45bbbfd0ff83ff0ea87d66fad23aa67450f23a76293f672387bc7b5d99ff7cc3ff83fd67fc2fe8b23edeeb9c2aa400d041799d07837fac9294ec26bdce75ae2d61d4b1b25eefdd36bfe9ffaff008154f243377a7557af1b490e70fe4e83633f97f9eb4dd5c325cfda35db27533cba3550387fa122b1e987c6e71d5c470d6e9f9bff0006d40901205b88f6104b9e4bdd3a90675f37395be9bd5b2ba6dedfb3fb5cd78b00741daf1e2cff00be2b8ce98d2d86ee93dc73f2fdc556ce9ceac7b0401ccf24fc5a98320eeb8e39767b8e9ff5e6d05aeea2e63687e82f0d3b5bff001de9ef733fe336ecff008b5d7e3e5d773584100d8d0e66a0873489df53db35dacd7e956bc746631f8a687c87344078e4787f596afd48fac7f61cdaba46610ee9f9360fb31ed4dee3ec7544ff003755cfff0007fe93faf627daca7d5124c0c894e8a94924924a524924929fffd1f554924925292492494a5ca7f8c1eb8707a60e9b43a327a88731f1cb681fd21ffc975bbbd0affe31f633f9a5d5af1afaebd64750fac197731dba8a08c6a3c0b6afe74ff55f91eb7f612538f7e449d8deda363fd7fcc56311ce66d6d7abcebf31f1fcd62cda892fdc7e91e3e256e74bc1b6d01e3fc2fe772760ff00a96b9c9b39505d18d96e6152e73c1b07a969e2786b7cff00ace5a363206d0275926393c4947ab1b1f1aadadfa475738f24f9a818b1e5add59c13d8c7655e5325b118008ea01ac3a7cff22ad90ddd22225687a6c0dd74f2e10aea491ece6390a3bd592b479cea78c4546e668e1cc7758e5e1ec21df9c083f82e93aa54f6d3b48d0ae58cb5ce69d083c7c159c26c535b30a2fb8fd4feb5fb67a06365d8e0721a3d1c98ff004b5fb1fbbfe33d977fd716daf2cff155d5fd0ea991d26c74579b5fad4b4f1ead5fce6dfe55b8ff00fb6cbd4d4ac4a4924925292492494fffd2f554924925292492494e37d6deb8ce89d16eca93ebd9fa1c60343ea3c1daeeff00cdb47aabc39ee2793c7e525771fe347a9fafd52bc16bbd986c12de407da3d47bb4fcff004db4b6bfdcfd37fa45c2c6e708d4f000d493e0929b9d3719d937868076fe71f09e3fce5d13eeea3895ecc72c3d8089d078ad1c2fabd6f4ee9a1eda9d6dc5b2f6b0024bcfe6fe6fb1ab1737a5fd62bf1edbdfed7023d3c5aac6b406ebbbd533eeb3ff0003558e4e39684578b6043863adfd12d5d573498bc35ce1d87b4abadcb01924fba17358d8bd42b737d504133bf739ba7ee11afd2feaaeab0ba67ad87617887d6d0e27809b2147a7d1921a8ebf573f27aabeb9f4c0dc008ddc040a7a8f5879de2033f7803f84aa1935e43ac70a59b9c09db2401cc6e3bbdbed4d674beb5fa37d363f6168363fd58877e733634edd9fbaf462056e07f796c89feb1feeba97e53aea4d76025c7bf267cd7339cd35e493fbe27e6b5a97e536e7576836327d8fd0b9a3c1ee67b5eab75bc73e832f882d741f81d13b19a95775b90131bec87a2f527f4beab89d45b3389687b80e4b3e8df58ff8ca1d656be8063d9631b6308731e039ae1c1075057ce2c3a4f1fdebdcfea4661ccfaaf8161249633d233ff064d6dffa0d6ab0d77752492494a49249253fffd3f554924925290f22d34d165a1bbcd6c73c3789da376d444ce2034933035d353f824a7c33eb556ea7ace554fb3d7b19638df791b43ad207da0ed6fb7f9f6d95d7ff0006c55ba2d2c7752e9c2c122fc9a9a5a7b337b5d3ff005c70ff003113aecd99d7d8ee6eb9e5d0444971b1e7d81acfce55312f733a863decd4e3dac7c7931cd7b9097ca7c974770fb5d375721ae120fe6acbeb3d270b25fb9f56b1a4687fe86d4ceea15d5c1d75fc552cbfac95d4de01f007b2a31da9bbc3ad8478bd0712826e6d52e6c4176b13fbab571b11adc3c9711f980fe2b27a5f5d6e79b1f936371306a203780eb1df9def77d1aabfcf5a377d60c1af0dd457631cd7f2e1dc0fa28f5d7b14d76ee3ec79b18d17581cc12e777f0fa4b428e838168f52e635fe51ff0055b562e7f51c5b9f6d81ce6dcd6fe81ec74411aee737f395ac1eb969a436efa7027e7f44ff00691d691a3a193563d1596d6c6d6c1e0068b9afac1b5f837ff2003f885a995d53d490089589d5ec9e9f7f72f81f8b5180a90f35b908e13e4f3ac3af915eb1fe2a322c7fd5dbea9918f96e6f8e8e6d6f2d8fcddbbb72f26688307b2f46ff0014391b723aae13b8b1b55cc13fbbbe9b607f6a9571a4fa624993a4a524924929ffd4f554924925290b2ac15635b610486b493040311fbcff006b51555cf796d100fbad736b6b662771f7ed77e6bfd3f51253e23d440f52a67076c900cc39f27fefcab74338a73f664d8da6b7b4c58ee011fbdc7e6bb77f615ceb763ecea37bec68aec2f97b38dae71758e6363f75eb2430376dee697d55dad2f0d30603bdf5ee876cf51bf45fb5090b042626882f79973635b652edccb18d7308d65a468b07345ceb9b53b4de758f0f157fead750ab37a6fa23f9dc273981879f49c4bf1cff0066b3b3feb4ade7e057960b208df0d716e8601dd01ca99f4c883d1b91371b0daaba2d195d2fecf68ac31a01687e91f7fe6b96165f48b2826bac8ad807e610e67e1f415cc2fab3656e7d6e2fcc6b8eea9c1e7d668276ec7b5c76d9b7fd233fedb4dd43a535953181d9105e4399e997692437dfb7fea91af1b55f705c36e2ed792f873fbb846bf346b5d637641248d0324f13ac21e4e336adc5b591ac57ea120f3f49cdfcefdcd889d1b05b4da722e25ee1e2644f8341fcd6a274164a05ed5494b5dbb5e472ab7547b5b870f76d0e7013f3ddfc15db5c1f6120449587d73298ebeac7d4b587d4b00307510c1dff00ae96304c87dab721a04b403a6d9e7cfe4bb8ff0015563475f735c482fc778690743ad7bd8e6fe77f37bffeb6b85611bc10bb2ff1765d5f5ec12c226cf543e748003dbf9c3f75dec56daafb1a49249294924924a7ffd5f55492492529032296dd653b8ff36e73f6c68658ea7ddff6f23a15fbf67b0ed71d013e7edffaa494f86f55b4e4f51cbbcc0f5b21f6437580e7b9c00e3e8b5eb3b617537b7f3a2647f275ff00a5ed573259e8e65f53e37576bd8e238d1ce6fb63f377843c586db0efa360824fc7d374a4969f46ccbf0ba9d0fa4c7a8f6d3634f0e6d8e0cf77f55def6af40e9f7b6cb8d4f10f69820f3a7fe4579dfa2ea32aa0247e9983c810f6f75df753c77d593f6ba3daf07dde1b82adcc0163c433e13a17533a8b457bea0edc356b9861c3faae0b9fc8eadd584d66cb35992ed795bb83f59a8f4c36e1b5fc39a7500ffe45359d4fa3bdeeb1c3ddd80d07c54512406c0db42f2a28c8bacf52cdd63cfe73fb7f5468d6a338fa55471d82d1cbea58727d38f805859796e7b896fc8764b52b65a22cecf6e2d0e701bac23dad3f77b973a5cf7bdcf79dcf799738f7255dea44fa464c973849545bf9159c310237d4b572924a467d20baefa905c3acf4c121bfa7706933112ef519ed07f3777d25c95225e174bf541ce1d5700b7966652624f0f77a07b3bf7fdca5637dbc4c6bca74cd2481220f74e9294924924a7fffd6f5549249252945e5a184bb81a99f2d54954ea7d4703a7623efceb5b4d5046bab9c7f72b67d2b1ffd5494f907d70c17e1fd64ceab6ed165aeb99e05b77e99ae6ffd71cfad62d6e1ea6d3203f56c798f70fed37fe9d6b77eb7f56ababf52ab2319ae60a68652c75901f64173fd4731bf43e96ddbbd73d7127dfc41e382d3cf1fba91484cda8e46750080439cd739e3c590ff00fa5ed5e837b7d661040160e5be2b81c0b1c72377236b9d23b7ef7f67dcbb6c5cbaf2319ae718204123520ffe4555cf763c19f16ce4e6616f2768f70fa2473f05956d76d648783f15d36456e993a13c1e41546eb34208f972a20591c30412a2e1f82b57449234f000420399025da0f04e0872ba97f363c490a952e6b5f2e1223503cd5bea2eddc700aa5c7c4fe456b1fca1af93e66cb18c658fd8f16d6c9daf12244c35db5dee6ee5a1d2b26ec4be9caa9c1a71afaec6b9c3735af6bdae617b1a5bbaaf67bd66321ac8ee4c7fdf959c2cd6e2dbbacafd6a4b9a6cae7692d1f4b63ff3777f293d6bf42615f65d8ec7dac6b2c206ef4ddbd8496876eaacf6b9f57bbd9b995bff00e0d58583f547ac74cea5d3837a6e4fda2aa60063fdb7d4d3fcde3e5d5fbd4c7a55ddf42eaebfe72dfe71fba921749249253fffd7f5540cccec3c1afd5cbb99433582f204c7ee37e93ddfd45caf5efaf1b2c7e2f4820ec3b5f98407091f4becccfa367fc73ff47fe8fd4fa6b8dcacdbf26ef52fb5f75a79b2c71718f0d7e8b7f92d4916f65d5bebfd6c9afa555bcf1ebdc086ff00629f6bddff005cf497139d9b97d432cdd9b6bafb6352ed604fd06b7e831bbbf32b6aaeeb8d7616b8f025362ee70369e5e7fe88f6b7fe922868f53a1e4b4b0905a234f0e557a5ee731cdb3530358e75d3fb4b57280709ee151a2b133e682e458bb3d7969260f6307fd7f797418a6ea40224b4ea2411ff0053f47fb2b070ea27ac7a40726481e3c2edf170375220c39bd8f07f92e2ab67951aab67c51b16c5971f4e1e000791a1ff003952c935c1207dc569df8a4b7686c3d83511a8ff00cc7f95f4166e450f683247c94019a9cc7b5a5fa08f33a95572097c81a35bc95a7f662d697ba64f6eff007210c12fa4c812f3ee71d47f55bfbdfcafcc4e0514f319b100b756ee8ddda6372aad6fe7bbe3aad0eb45a32ce2d6016e37b5ce3c9b1c03ac9fea7d1febef59c491f15721f286b4fe62cdcef0e6207c3bbbfb4a13d826d4a70d4e58d9e9d95958992dc8c4b9f8f915fd0baa716bc4f23737f31df9cc77e8debd07a2ff008d4ea74ecabace3b72eb1a3b2288aedfebba971fb3daefea7d9979d31a58e6bfb4c1f9ab66e78b7d1a8096fd271ec8a1f7be91d6fa5f5ac6fb4f4ebdb7306963756bd84fe65d53e2caddfd657d78274bead9bd273599d816fa7915e93cb5edfcea6fae47a943ff0073feb957a76fe917b27d59fac985f58ba78cac7fd1df590ccac6265d5591c4fe7d4ffa745dfe119fb96fa955612fffd0c4b2e3593bbb6a7e099d682f2df1123cc1407b85973ab26458df52b3e20fb6c67f61caa8b1e2833fcee2bb63bfa87561456a5b5cfb28b0927d4a0ed77f549f6b95bc53bf1db6d7a31df407f207b19fdaf6aa6d74e55a3f36fa371f97fe728f4e0bb0b11f73721f4591ea3ead1d50d3fc252fff0009fbfe9b924b61e37334e555a843c83a2a557d61c87365f8cc71f1adc59ff41feaa95fd55955845b8d6d6f3ac6e69ffc824a495bdd8fd4fed03dbb58e7b5d04805845c0ed6edddfcdaf43e93d4313a9e0b32b1840712d737f75c20babffa4bce2bcda335e5b5d7635ecaed7190dd46c734c6d73bddef6a2745ea397d3eeab2319c04b765d48dd176c2edbeab47b7735bf42efe72bffc0d45971f18d370c98b2701d762fa4dd24813b48fa2e1c8407e3d4e24e4b40278780769ff00bf31c81d2ba963f54afd6c77cb9a62da5d01ec77eed8df77f62c67e8ec5a37e3b32e87e1c1dd67a7ae9019bc7ad77bcedfd559fa7f76f54a5e9bbd1b7608be8e55b436d9da36d23b0e5fff00982cdeaf93f60c2b2f6802c003296f6deed19a7fc1ff0039fd85af8f995e4e2b6dacc824b7741125a4b376dfcddff4971bf58b3bedf93e8d5fcc50486b87e738e8fb3f0db5ff00e66a5c50e23e1b959925c31f13b38047b49dc5cedc0b89d4924eae71fcedce49ec9e14ec0d68734692343e60e810aa16dcc79de5ad66800d255c6a283639d3e2a4cdae9f4c6fdb1b8f004f9a8518e1eefd24c71f356f1aa156e68e6759ee1253175609dba9da5baf02491f9bff009252a1f3eb3fbbde7ee089e9ed7e9f45d04796decabe33a282eee498494984ba4f60b63ea7f5eb3a1f5aa3377462dae18f98dec6a71fe70f3eec57fe9dbff5daff00c2acb7edab0c4fd33cfcf54290cc4aff0078ba4fcfddfc5a8a1fffd9ffe1123d687474703a2f2f6e732e61646f62652e636f6d2f7861702f312e302f003c3f787061636b657420626567696e3d22efbbbf222069643d2257354d304d7043656869487a7265537a4e54637a6b633964223f3e203c783a786d706d65746120786d6c6e733a783d2261646f62653a6e733a6d6574612f2220783a786d70746b3d2241646f626520584d5020436f726520352e362d633036372037392e3135373734372c20323031352f30332f33302d32333a34303a34322020202020202020223e203c7264663a52444620786d6c6e733a7264663d22687474703a2f2f7777772e77332e6f72672f313939392f30322f32322d7264662d73796e7461782d6e7323223e203c7264663a4465736372697074696f6e207264663a61626f75743d222220786d6c6e733a786d703d22687474703a2f2f6e732e61646f62652e636f6d2f7861702f312e302f2220786d6c6e733a64633d22687474703a2f2f7075726c2e6f72672f64632f656c656d656e74732f312e312f2220786d6c6e733a786d704d4d3d22687474703a2f2f6e732e61646f62652e636f6d2f7861702f312e302f6d6d2f2220786d6c6e733a73744576743d22687474703a2f2f6e732e61646f62652e636f6d2f7861702f312e302f73547970652f5265736f757263654576656e74232220786d6c6e733a73745265663d22687474703a2f2f6e732e61646f62652e636f6d2f7861702f312e302f73547970652f5265736f75726365526566232220786d6c6e733a70686f746f73686f703d22687474703a2f2f6e732e61646f62652e636f6d2f70686f746f73686f702f312e302f2220786d703a43726561746f72546f6f6c3d2241646f62652050686f746f73686f702043432032303135202857696e646f7773292220786d703a437265617465446174653d22323031382d30322d32335431333a33393a32302b30383a30302220786d703a4d65746164617461446174653d22323031382d30322d32335431343a33373a35382b30383a30302220786d703a4d6f64696679446174653d22323031382d30322d32335431343a33373a35382b30383a3030222064633a666f726d61743d22696d6167652f6a7065672220786d704d4d3a496e7374616e636549443d22786d702e6969643a30623836306537332d316564642d663334342d386337382d3733333138653164653564612220786d704d4d3a446f63756d656e7449443d2261646f62653a646f6369643a70686f746f73686f703a31363230376631632d313836342d313165382d383365622d3963366235313038343439392220786d704d4d3a4f726967696e616c446f63756d656e7449443d22786d702e6469643a37303462386635372d646430652d366234312d616363652d393165643931343363656362222070686f746f73686f703a436f6c6f724d6f64653d2233223e203c786d704d4d3a486973746f72793e203c7264663a5365713e203c7264663a6c692073744576743a616374696f6e3d2263726561746564222073744576743a696e7374616e636549443d22786d702e6969643a37303462386635372d646430652d366234312d616363652d393165643931343363656362222073744576743a7768656e3d22323031382d30322d32335431333a33393a32302b30383a3030222073744576743a736f6674776172654167656e743d2241646f62652050686f746f73686f702043432032303135202857696e646f777329222f3e203c7264663a6c692073744576743a616374696f6e3d227361766564222073744576743a696e7374616e636549443d22786d702e6969643a32366161393533642d333666612d386134352d623531652d626438663935323839363164222073744576743a7768656e3d22323031382d30322d32335431333a34343a31382b30383a3030222073744576743a736f6674776172654167656e743d2241646f62652050686f746f73686f702043432032303135202857696e646f777329222073744576743a6368616e6765643d222f222f3e203c7264663a6c692073744576743a616374696f6e3d227361766564222073744576743a696e7374616e636549443d22786d702e6969643a32393866653561382d376661332d646534642d393638312d346635396334323366623162222073744576743a7768656e3d22323031382d30322d32335431343a33373a35382b30383a3030222073744576743a736f6674776172654167656e743d2241646f62652050686f746f73686f702043432032303135202857696e646f777329222073744576743a6368616e6765643d222f222f3e203c7264663a6c692073744576743a616374696f6e3d22636f6e766572746564222073744576743a706172616d65746572733d2266726f6d206170706c69636174696f6e2f766e642e61646f62652e70686f746f73686f7020746f20696d6167652f6a706567222f3e203c7264663a6c692073744576743a616374696f6e3d2264657269766564222073744576743a706172616d65746572733d22636f6e7665727465642066726f6d206170706c69636174696f6e2f766e642e61646f62652e70686f746f73686f7020746f20696d6167652f6a706567222f3e203c7264663a6c692073744576743a616374696f6e3d227361766564222073744576743a696e7374616e636549443d22786d702e6969643a30623836306537332d316564642d663334342d386337382d373333313865316465356461222073744576743a7768656e3d22323031382d30322d32335431343a33373a35382b30383a3030222073744576743a736f6674776172654167656e743d2241646f62652050686f746f73686f702043432032303135202857696e646f777329222073744576743a6368616e6765643d222f222f3e203c2f7264663a5365713e203c2f786d704d4d3a486973746f72793e203c786d704d4d3a4465726976656446726f6d2073745265663a696e7374616e636549443d22786d702e6969643a32393866653561382d376661332d646534642d393638312d346635396334323366623162222073745265663a646f63756d656e7449443d22786d702e6469643a37303462386635372d646430652d366234312d616363652d393165643931343363656362222073745265663a6f726967696e616c446f63756d656e7449443d22786d702e6469643a37303462386635372d646430652d366234312d616363652d393165643931343363656362222f3e203c70686f746f73686f703a446f63756d656e74416e636573746f72733e203c7264663a4261673e203c7264663a6c693e786d702e6469643a34333235633736302d306331382d613034342d613635322d3139313433623839373063303c2f7264663a6c693e203c7264663a6c693e786d702e6469643a37303462386635372d646430652d366234312d616363652d3931656439313433636563623c2f7264663a6c693e203c2f7264663a4261673e203c2f70686f746f73686f703a446f63756d656e74416e636573746f72733e203c2f7264663a4465736372697074696f6e3e203c2f7264663a5244463e203c2f783a786d706d6574613e2020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020203c3f787061636b657420656e643d2277223f3effdb0043000604040504040605050506060607090e0909080809120d0d0a0e1512161615121414171a211c17181f1914141d271d1f2223252525161c292c28242b21242524ffdb00430106060609080911090911241814182424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424ffc00011080190019003011100021101031101ffc4001c0001000202030100000000000000000000000405030602070801ffc4003f100001030204040405010703030403000001000203041105122131064151611322718107143291a14208152352b1c1d162e1f02472f1163343823492c2ffc4001a010101010101010100000000000000000000010203040506ffc4002911010100020202020202020203010000000001021103211231044113512261327114913342b1d1ffda000c03010002110311003f00f54a02020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020121a2e4803ba0acaee28c0f0c667acc5a8a017cbe799a35e9ba0d56bbe37f04d0cbe17ef333b81b7f059987dd136a59bf68de186c8590d2574807ea20341fca9b5709bf689c003418a9a6bfea2fd875b14d89743f1c682bace8a898f69bd9ada86e7fb15536d930df89582e21e16732d3f8840bc8059a7a120e886db532464ad0f63839a7620dc1457d40404040404040404040404040404040404040404040404040404040404040404040404040404041f1f2322617bdc1ad68b924d8008341e2bf8b58760ed7458706d5ce2e0bc9b31bfe5136e8ee2bf8ad8f63f56e89f5f2653a360a7f235bebfee834aa999f2b9cf9e4ccf1cae490a6d5103deeb98e301bfcce172838f98937bdb726f6fcaa38b98f70cf1b5f23469988b007a0ba0c5e3d5d3b8bd8d9a2cbbb8689a36bbc138b27a5786cd3d4374b5c3cd8fa84d23b7382b8e313c1a584b6a8cf42f399f1037f2f517e686ddeb86e31438b411cb4b511c9e2373650e1987a8454d40404040404040404040404040404040404040404040404040404040404040404040404040414fc45c5586f0d53992b266f8b6bb2169f3bfd912d74971b7c48afc55ce6ba67b2227cb0446c2dd0f5288ebbc4df5188032d6cc2960ddad1f5394db4a89e68da3c2a484c51ff0030d5ef4ec7d8705a9758ce0b1aed433f53bd537a1ca5c3a59867686c34ecf2991e773d1ade653620d4454d98b21a79240dd734aed3d481a26c44a8aa9eb1c1af96e5832c6d8dba01d05b6454621a2c089093f566704da699b232e08cf97f4936b84d8d9f853167e1b37872bc160d5a39b874ecaed2c76b7c3ce3ba2c1f11f12a0bcc12c6e04b770ebe9cfa04d8ed7a2f88180d4c2c7c95d146e73b28693afad85f44d9b5ad363d87561229ea5925b7b22ed35b3c6f759af049d45b9a0e6808080808080808080808080808080808080808080808080808080808080808080834ae3ff88949c3103e8e96564b89bc59b18d4b2fcc844b5d335f8955e213c957884a5f2bcea4bae4a32aa9228e3678ae66694df2b77f74695b51452565501632cf97e922cd6226d269f0ea6a2717b489a70df3496f2b7fedff003ba518eb2b8c1216d2812bc8b3dcff00a59ebfe166b4a2c424a8980cce75dc7eb76971d9bd14151302e058d7975b4d7646b436864d9ee731a474b29b591f1f506001b190fb737343bfaa7b4d691cd6798934d11bf20d23fa1574949669e22d79686dc5f293cbb05a44fc3eba57961766cb9859bc8dbaaa377a0c424900918eb102c0b797b2911b5603c75fbb678e9f1392a606bb46d4d293667fdcdbecaf68edcc1b16926a58ab289f498a42e1e630c81b211d40b00ef43628ad8e8aae1a805b0cce2e6fd51c9f5b7d41d422a5a020202020202020202020202020202020202020202020202020202020202020d2be24fc438383a88525316cd8bd4b48822fe41fceeec107450926f1e6abada87d5d74fabe4bdc8bee8cb9c795d3895f7738e8d6df4ba0c55150d12b990d9f3bcd9cf3b37d1511454c633c54fe467ff24c7793d3991db9a9b34e12ccd6111b49008bf87701c47faadf48edbac8afaba91106c3132e49d001a37fca34a934b3d7553a36e791ff00a9c397a052aa44d454f864033dcd45ae19a10de84f752ac55c8f74dac8e7587e167d36fbf2e6619616b43c0b917d8752792929630c8f8e985e22d9a6e5211e56fa0e67badb282da792773de49201bb9c7727d55db3a4aa78c44f6bde4e9b0076f50aec6df81099ec68f9ace2d7ca4917fec9b4b12b1401d1de563c9b69a5885a6630f0bfc41c6781aadbf253f8d42e787490385da4f3ff00b4dba2cb4f4770a711609f103086d6e1ce74150dd5c01fe246eec798bf25ada697d86e25542a4e1f89461b50017472c63f87337a8e87a8416a8a2020202020202020202020202020202020202020202020202020202020d7f8e38c28f827009b13aa21d27d1043ce590ec07f741e63acc5aaf11c42a713c4a633d64eecef76a72df660e8022394152d8da64940cc7aef7e8111f64c4db144e2d706b00f3bcbb41d877482aa1c44d6b89766642dd2c39f6f7416222315a4ca03c8bb5bb968ea3fcf3536ba05335c1d21f2b47e9cbe6728ac6dc35afbbe49031bccf41d005362430474b08f92195bfa9f9413fee566e5a6a636a9eaa925924cc03bcdee563c9d3c5f23c1321bd45d8d3f4c40f98faf45cf2cf4e98616b33b0e0633147108e33b31a3eaee4f35cff2bace2d214bc3f79323b43cedb00b78f25bdb19f1c88f353d80653b036260b0ea4f55d7f2473fc575da23631092248dc6fcf62b532db9e58e9778456474b9000483a076c0763fe56f6cd8bca8ae86a21b4b99cd1b0bec7b157b65a6e2119a69cbc39d242fdefa11ebdd5daad78238dab38471565452c8ef09ce01cd04efe9d4a1a7ae787b1da5e2ac121c4298c76905cb6f7ca5545c36fed6dd07d404040404040404040404040404040404040404040404040404040418aaaa61a2a696a6a246c50c4d2f7bdc6c1ad02e4941e55f889c793f1c710beb585cdc3e98f854519e9cde4753fe141a9bea0b0b9ce3e41b58ee7aa1a60fdeae73bccf361bdb92b1185d55f3f52d31831c2c75803aebcdc9b17d470b2021be57381b35b6d875f52b36aada16b6590c921d2fb93fd141cea2b2088100e6713cc296ac88e1bf38f1706d7d728dc2c5c9b98d58329d8724590d9ba36360d7fd9625fdb77a609e3b4a5b196b0db5ca341efb93dd72e4cfea3af1f1efbac50c032101b98df5279ae16fdd7a71fd449f942e665840cdcc8e4a45bd385461a1b1d9fb8d5c7a9572cf5d1861beeab9f87b493a6eb3336ee3102aa91d72058d873175d70cf4e39f1caa991f240e391d948dda765eac33dbcbc9c7a668b1093c3f1034e9f5b3fc2edb79f4855754d75ae0989d722c79a2c40790087348b3c6a3ad9076dfc02e356d0632706aea8c91d4372c4e79f2dfa15a959b1e9aa79b3dd8e6963c7e926fa751d95199010101010101010101010101010101010101010101010101010101074dfed09c6bf2786c5c2d432035359692a729d5910d81f53f80a0e81329659ad3a305bdd041ab9bc43919727fa77490a80e9b33f2b75633777f315a88b3c3ac0788f1e568b86ac5aba5cd2d588a2f1740f37d4959dad8ca71675c8bf988b5dc7659b5a98a661b42ea86baa262ec83603573972cb2fa8e98e3f6bda787e5981a199e470b860d9bdc9596aa5431329d8e399ee91fa977558cf3fd3ae1c7f7514c6cb3c902c7603fcae36bbc958e28f3bb265b0e60745cfc9bd2d1b00642065df603457d7b667758e68eed37b2e3e5dbd13a574cc68d742ac66aaeae3bbae174959b1575b46241980172353d575c33d39e586e35dac63e89f717c874217b38f3dbc59e1a42f9c39bc379258576d38381fa1ecbdec6e3d151969aacd3cd154465c1ec21dfee88f697c39e238b8a38570eaf7ccc74de188a400fea1b13decac46da0dc6f754101010101010101010101010101010101010101010101010101057e3f8dd2f0e60f558ad63c361a68cbcdcdb31e407727441e37e22c6ea78931cadc62a89f12a652fdef90726fb0d148296aeab268d373b7fba6955f254100c6d779e4fa9dd02a8f949187b81fd00d85ff00525a45b875d81add973b5a919a332cef0d8db72dd5632cb4de38ed674387025864177137738f55cb2cb5dbacc76d863a9682c8a1b90dfa4b46e7afa2e6d5f6b7a2a6f0a36be505ce71b86ff72b9e59edd31c35db9cbe56bb300e76ba0d82e7bfd3bcc7f68cf2f70b002cd16bf758ae9a91c6304481bcb777a744c7f759b37d44d64cf3737b13d792ce576de38e9865766e84acc690ea1b6bff00cb2a20cb1ff0d5db3a4531e84586a15959b14b8bd0ff0004822fa6cbd1c796ab8678f5a697500c72161eba2fa38ddbe7e5d572f10ba1241b104105565f4c82e0b6f6b7f741de9fb36714b22c42a387eb5f786aacea724fd3234dc01f72aa3d2ea82020202020202020202020202020202020202020202020202020e8bfda4b89878347c3f13f40e13ce1aedf70d07f254a3a1259c45106ebd6dcd4555554ae638978b3ba745a9110c12f7e5fd4edd05a46c1133d34f758b574e6d7b89f0986c49f3158b7edb91b351c1f2503626919dfa1b0b1279eabcf73dddbd131926960c94863590459cecd035cc7fbff0045cffdb7fe9b1e178549033c590033b85ddb10dec1632cf7e9d31c64ff006b3c81be501c7f99db95cf6e9a607c61da65b7aeeb2d30ccd0c68cac0fca2e1a073517d38c11bf2b4c8d697f3b059cafd358cd24161b0f2059db5181cc249b81eca5ad304d05b5b5936ca2cb1794dc8f75a89ada216ebb5d5db2acc688f0ae370bb71fb73ca341c563cb25fbafa3c55f3f9a6aa246ef3165f4768176d38ec6baee3dc5c20bae15c724c0b1ea1af8e4733c099af363d08288f75e195f06398453d6c0f0f86aa20f6b9a7a8544e6dec2fba0202020202020202020202020202020202020202020202020f8f70631ce76c05ca0f17fc47e279b89f8a6b2aa491c5824735809be56dcd87daca2c6a13d5786fce40246a01eaac456492ba5797b8df9ebd55466a516399cb35a898c76770034d740b15a936b5c1a9d8c94d438eacd182d727fd4bcfc995d6a3b71cef6d868a8e5ad97c490389d98c02c2dd4ae372d4e9da63b6eb83608da76f89206be57e84db460e8170b96fd3b4c34b77d3b5accac201dae3751b88e4656dec091a7aa8ba4291e03ad722dd0eea76d3842c0f24eb91bcb9b8ff856ebd33376eea436176e458ff458d37193e5cfea372b3669b8c6616df4fbac88f3b0589014456d5c65e000e22db8eab72aca89230b5bcd58cd8a6c50e68c8e5fd574c6b966d2b180434f6e6be8f0d7839a2a038e5cc37bfe57a9e6737b831db1b5ee1159227b45efaf3088f577ecd1c4eec5784a7c26698be4a093344d3bb62772f637fba83b9150404040404040404040404040404040404040404040404041a47c60e2b7f0a705d54d03cb2aaa4182270e448d4fd9078e679b573dc7cced495155951217bb7df75a9118dad240b0df54a4890c396e2f7b05ceac8b1a484c8e6b038b4c960481ab42e59e5a76c716ef856150d3533432225c7405da9eda2f1656daf5638c8d9b09c324800748d00bcdc8ecb9d76934be6384606b7f52b3a5619266b6e5db0e40eeab7221cd5b92173ac45f97350b3551436498e7733c2e8dbea3b9eea6f46b7ed360635ad02ed681add495ab19d80319abc9275252dda47192a18072597491c5b25cf2b75535fa4bedc66caf1dfa2cf8f6560928f36a06ff00757488b3d159ae25a47645ad6b19a7c8dbd89ebd975c6b8e736d3718833c6e7597b78b2d5793971dc6b40d9e59ff002ebdf1e1ae59cbe3b8dd9adba8e6839464fd5ee107697ecfbc58ee1fe3fa28247e5a6c42f49274bbb569ff00f603eea51ec46820589b9eaa8fa808080808080808080808080808080808080808080808083cd1fb47715bebf1d6610d6b990d18b024fd6ee6e1fd3d8a11d195135f6f64904379b36e79ad0e40e5b5f5d162ac4ba48bc477e573c9bc6365e1f80b251348d0e37f28e63fdd79f3ca5e9e8e3c7edbc61f885242467fabb7d2170f1b5dfca44f9389e8984832b469b5f9278587e48c6ce26a59ce564c34eeb171b1a99c72fde0d94795fee4acde9d6641a802ce1e63c892b35a726481ee1adcacd6bd32fcc86b0faa94717d55a3043ad6484463582d7711d55f12e5a8c52e3b0462de2b05fbadf8573bc92233b8aa063ac1e1c7d56a70dae579e2447c59106eb61d3556fc7a9ff22564662aeac2e73c068fd2de67bae770d3b63c9bf6838af86f639a37b6ab13a5bdb48c419e47b4eebd5c7ede7cfd34daa6f85526fd57d2c6ee74f9f9cd57c0ecaed345a619237821c2d61d3a209f83d6ba86be2a960f3c4e6cacf569b84a3defc338dd3f11e01418b52bdaf8aaa16c82dc891a8f637082cd0101010101010101010101010101010101010101010106bdc77c4d0f0af0ed4564921648e0638c8dc1b1d47a004a0f1671463b3e3b89cd5b3b897c87404dec397bf5ee8282475dd6fbaa38ce2d2b05b4cb7fc94a423712e24807d566ac8b7c229be6a70d768cddd6e8b872e5a8efc786eb7ca2c3449080c6065f6edd978ae4f578fe9c6a70a742dd4381def7fecb73912e16b5daca095ee2f63b30bfaadfe58cde2d314348f63ef7ca573cb9256a60b4a796a22b5a475fd7758b94ade32c5ad156cd2483c577bae793b636ade3a90d682483d02c6f6e8e33d5e5669a94d08551891f0728362ae319bd296ab1190b4b1a4f4baeb351c6a8ea1b23dc5c6437eb75d667a72b8dac11c12bdda15afc9a63f1ad68a96684673bf25cef26fa6a71e96d0cf2b45cb883b6eb3d3a77197e79cd69cf775fdd4d6da99694b5ad12bdcf0342b53a4f7db4dc6e1c9202bdfc396e3c3cd3b402eb90bb38b231c43ad7d0a233c0eb3dbd8d928f58fecd1c56cc4f872a70173bf8940e12462dff00c6edfecebfdc283b995040404040404040404040404040404040404040404041e6ff00da3f8b057e28dc129dc5eda31e70d3b3b9e9ccec3d8a0e81a87eb73bf4544671cbea77447105cf713b9eca5ad265052be67868b93b6839ae59e4e98e3b761e05c34e8a8c366634b9d6b90355e0e4e5dd7bf8f0d46ccd84451868034d2ebcf726fc506ba68a2043e5034e6745264de9ae5663b8553b8b5b3b5ceedaaeb31cafd3196527baa99f1aa390dda5d6eb956a71d4f3c59e9eb3330163b334ac658e9d25956d473e700efdd62f4e92459439e4d40d02922d70a9240d2e48dd6b4cd53d5d4104856337b554f5445c0d4f45b919708836e1d33801b94bfd1a5952e3183d3d9af9599baa9e39dfa6778fed2bf7e60d31b36a23bf7d166e197e97cb1bf6e4e7c521cd13da5a7a1dd252c706ef6576cd8c750c0e6823d0ad6c8d6388a8ff0084e701b6abd5f1f2ef4f373e3b8d66fa82bdaf132b4e80a0ca1d6d5076ff00ecf98fbb05e34a37bacda6aa71a399e5d60338bb2e3fee03eea0f5e2a08080808080808080808080808080808080808080821e33894783e135988cbf452c2f94e97d85d078a38c31192aaa5f5f51267aaae7baa1e6db071d00edba0d3df7712e20aa303817127603aaa39c11973edcf758c9ac5d91c0bc30faf6b6aa504b40f2e9a95f33e4f36aea3e8f07175baec1870a7c0cb586502f72bc5e6efa6a9c51c42dc2e37865b30d80e6b586373ba8d5d63375a0537ef0e28c47c39e578693a5cd9becbe8e3c78e13a78b3cf2bdd56e2d4d1e1d51340f32b5cd7d9b91e0580ea2dccaf4e3269e5cb3a8540e9a4a88d86525b21037bace78e326dac33bb5b52c8ea5ab30b8d8dec4723dc2f2e73736f671d6c9871736a00b3883c979729b7aa37ac2689930008372392c4ad39e31823208dd2d9c34d16ad37b8d0f15b44e76baade2e79289f288f348ed4f25d7c77d473b75dab73cb88d53620eb973ac0720bb638f8b86796df318a3830ba8969e763a4759b95c1e5a473247237d97a78f5aede3ceddab2960324cc2c7e85c3ca4f25729096c5e54b66c26a58692a1ce6bbea603703b2f2e58e394efdbd385ca55ee198bb6b1992619241b85e4cf1f1af4ccb7163b8d6e429b2441c4e8c4d4ee196f71f65d78f3ed9cb1dcd3afa6618a4730e85a6cbeacee3e659aae51baedb7b22323352151b2706d4491e2cd6c5abdcd26317fd6df3348ef70a15eeac031038a613455b7691514f1cb99a6e1c4b41364160808080808080808080808080808080808080808083acfe3b710d3615c2c2092a5f139d23642d65eef02f661ec4fe0144793b1aa99a6944f31b4b3798341b86b4ec2dc9688a57c998973ae40d9457104168d2c372a0b1c2291f89d5c54f1b72b249032fcdc573e4cbc71b5d78e6ee9e98e14e1a6d25043135b60d681b2fcf7267e55f670c648b4c5786e69e98b207f844e97b5d667f6b2c75f623f0bdb24de3d6d63e620dc31adb05df1e5f19d166fdc66a5e13c1a2696c8f6c2e03425bcd6f0e7fdb965859e9ad712f0061358e7d41f34bce48a5b13ea0af5e3f2e69c32e0f2be9ac3383a92865cf1ba4ccd1a6778207d82b7e4794d13e3c83700a4f10be599c491bef65cff35f51d67169b360985b5cd05ad395a2cd73b72b9574fe9b9e05465b3b5b9468375cacd3b49b8bae26a4632985c5c96fb2d56719b74ce314ce92ba68c8f45d319d39e5156304f9c6f87339cc603739775d665a72b36b0a0e1ac3e9a66bdb2c81c0e97364fcb7ed7f0ed6d59c298662ac6bab1f14af68b35d9ec6dec93e4f8c632f8fbbdc578e0fc2a845dada76b87ea2e2f3f958cbe5dbd46b1f8d27d20d76150105b138bddd6cb3396deeb778d1a9f0398384801b8e815cb92531e3d2ea1a49c3435e0fbae5b8d78b2d552da9ef620f35ac32ef4c651d6bc414fe0e2520b68ef305f5b872de2f97cd8eb257c457572488cf3416383d4fcae210cb72321b8b73ec83db5f08677cfc0b401f21798b3c22e2da35c72fe2c83734040404040404040404040404040404040404040240049d820f29fc60e226f18e3f51571be465053bc41007100485b705d6fbebd2c83a9312cd2d5484bda2d61722d601515b30cc431badf601368e6d89d248da766e7ea3c80e654feda6f7f0df0c656717d3c4d1fc2a78cbdad3bf4b9eebc5f333d71bd5f171de6f50d044ca682360b5c357c47d2b36b26c6d92c0b45adb2f46136e377182bb06a6747731eb6dc6eba65c324da63cd95ad0b893866095d6607b1dd402570be3eabd78dbadb46c4384eb9a1d6ac019ff0069bade38e3ed32e4fe95078627bddf31b77dcae9a8cf95b16b84f05891c249dafcbfeae6b5b62eeb696611153b406b00d2c000b3bfbad4c6c5ae0f87ff0014388b3891a2e56f9577935167c5146e6b72bc681b6f45be596572e1cb78f4ea2c6e8d83102e00745ac2b5942970e6f805ce0092eb6ab5b66e3b651854446b182defaa4c99f1ae0786629fe8964889e40acdd5599566a6e0392a0dcd44997b85ced8d7955cd2f06d35136f25e423a859b93525acd36134d1b6c22001fc2cecb1573430662d6b7cc34d96a6d9b1555f0b72380d3d974c3db9e7e9d5fc63088eb23775b8bafa9f16f55f37e4cd58d788cae5ea7959a228333642c7b5e09691d151ebdfd9c7197d7f0bcf4d2499b27872b75d45db94fe58a0eda8e56c85e06858eca420e680808080808080808080808080808080808082a78b2aaa28786b13a9a50c33474cf7373bf28bdbaa0e83f8bf846158170de1587c54cf15f201533cce22ed0400583b5efe964b08e84ad7c95750e2012e91c4d95820caec93794edcc25173454cca5a1333c1f1246179bf260d87b958b5a8dd3e0710fe2c94bcdcf80493ee1783e7ff0083d9f0ff00c9e92a67dc5ee2dc8af8d1f4aa645581aeb35d62765e8c32d7a73cb8eeb69efab123432e1ceb7d257b7cb7d3cbf8f5da8b146bcddc406af2f2e2f5f16bd35eac8586edb5cdbd9739d3b5c77ed01b46d680e6c409bd81236ecbacbd33e1f49cda2bc6252db1e965bd75b627bd31f845ce01dbdf65c32ede8c62df0aa706765c697b7a2b84de518e6bac6a5717462386c35ccd1ec57a3e474f3fc5edd3d8cd3bcd4b5ce6d8775cb1ba7a327c635d66b37055a4ab8c3e98101ae1b734dc4b1b0d0e191db316b4e9d169cec588a58a38dcd6ebcee3fa2c584bdabaa0efa5d70b1e89151572d8f6f4d96b4553d64cd37202d473aa3a9973388bdcae98c71cdd79c7ac0248795f55f4be37dbe77c8f51aa0f336c770bd6f239c4744195c7cb7483d2bfb2c574f2fccc2e7931089c328ea1c0ff00fd1fba23d025ad8ab03836de336c4f71b7e2e8ace808080808080808080808080808080808080820e3740dc530f7d1496f0e67343ee011604122c7adadee83cd1f1df10966e30ab8a480b59047e1b5af3bb40d081d2e7f2a0e989cc4446599aec8fce7ab893fecb4225242279c66fa46a7bf652d16788559b1b3816b8b403dbfe00b0d46ddf05e6f0b8c2c0dbc485e178fe777c6f5fc5eb37a26094d9add8597c691f5a25c65c4346604f35bc3f4bd7753db50c8ec0b01701baf663969e5cb0b586a6d381e6bd8ea004cb1dae17c6aaa4a700c85cc19b901cbd4ae5e2efe4c31401eeb169ca0ee922dba4da80c8e9c5f9ee56f932d472c26f240a7f0e47e56904df70bcbedeaad8f05c3c4d28362bd5f1b8fcb278be4f278e2c1c6407923d0e516165bf97d5913e14dcb5d658d533002e2d371aaf34af5651ab1c72186611bb6beeb7aa9a6c785d6c13005af1af752ab66a2ab0c6eaebfbec158cdc76ccf9d8d26d6d79a5bbe898a0d54da5da412b0dc52d5b896b85c6a55d25ad7aa9ee89cebbb4e8ae99b5512499e4242dc79f268ff00101d9a78001c8afa1f19e0f90d4587407a1b15eb796b20f293f7551977165477d7eca58c36971fc430d91cecd3c21d181a824119bf03f0a23d3f50d195afcb98c6ecc3fe7a22b2a0202020202020202020202020202020202020c15cd88c19e56e61190f1d88d907913e25d436b315af9be69d52c2df11b216d9e5d211e5772b8b9dba28aeb9c4636c2e781702f656223d235ac8da5c3eabbcfa0d07e6ea5ab18e770918001b58ff006596e365f8635bf27c614a5cecb99f92fd8e8bcdf2a6f077f8f7593d314b3b6edbee355f174fad2a57cd86c848b0ea55c7aedd26b5aae27186d8b5faf71a2eb33be92f1fe91a4c6fc21f50b726df4566753c22b6ab8918c04bade815ab318a9abe38a7a661b3fcdcd36d4c12387abb11e3171787fcbd134e5cc377952f7eda931c1b84785c58706102fea6ea6534ccce65e96d438b7c9c2e780dd3aaedc3cbe12bc9cfc3e774d7f1dc64551713604f45cf933b9ddbd3c3c7e11a1e338946c05b7bbb51aacc8de4a8870dc3aa681ee9d8cf11e6f996bcf4c78eda9415f260d89ba0125e3cda1bf25d352cdb1e5abaade70dc74c91037b93dd674bb59fef566519a506fa2cd8b2b05462adbe8eb1e49e2bbdaa6ab12739bad95912d535454b9fa137473caa334daeb51c7268dc72fcd591f66af7fc6f4f173fb6ad18fa81d97af6f2d646f9803ffd55659d962d6f636283b27f67bc4db847c49c39d27d331305ec2de6d37e5b856fec7b49c03da41170458a80db6516dac83ea02020202020202020202020202020202020aec79d57fbb678e89c1b50f61631c760e3a5efdb741e4ee3d929a7c73116d30608e5af2e6b4107c8c075f726ea0ebdc7ec247363166e636bfaecac10e77189a5b7d1b1b40fc28a891bf3175b91fc295ac5b0f0f42f86a69eb183cec91aff00b15e5e5ca771ebe3c7ede898310c9035e7f50cd75f27c5efc2a34d8a820e67efdd3c5de6485558b5b67d96a4d2ed51598e16bad9f65ad26dade218f497759e6c7bad4897252c2fa9c5eadb0309b5f55ad44f376be09c474dc3b85454ae394b06a2dbae1c9bdba63dc737fc51a19653036a63749fcb985feca6b2d6cde33d384dc6cc7308125bdd243c94b59c5a2ce25db8eab7225c9aae238ef8c4bb3003d56e472cb3418f1e0f6e48e606dbe5297049ca82241575c45f369bf75d27519caeeed7147532d2110c9ec562b5b5a3710735a1bb7b2cb5b709b1125a35bab0da2beb849617466d6232e63a9574e79533e5693d158e75a2f159335733d2ebdbc1751e5e59baa291b9481d57a71af3e53b7107ce5a17472498802c78b798ea3ec8360e08a9187e3d455eff00fda86a2373c9e40badb7541ef7a6999514f14d1b83992303da473045c20c880808080808080808080808080808080808082bb88dc5981d71631ef91d0b991867d45c4585bbdca0f23e274ef38ace256e4f966647b48d8dee7f014fe868989486699a40d092ac106bc35af235fa46fe8122a3d1343ea1ade44eab1c9e9d38bde9bfe05870f9569b6c6decbe767775f4319d3b31d23a3c3a986bab07f45e4beddb155d454e569249d37563a6392b27adced2d26ed70fbaba6ad535756e5045c95626d4534efa89323773cfa2db3e4dcf84f0d8e9d8d711771dcac5c964daf788f87cd75178d13dcd95a397452597db72eba75dbf846364e6579717937cdceebaf9f5a72b8cdedf5efaba11924cf2463676e42cd92932b106a714cc357936e402b31672cfa41964f9c1692f97f956e74e77b29a89b1eb1b4b6fd132cb6d638ad28e2f0240e16bf55cf2edd274995d5b2989b1f871900dfc4fd43b24fd33f6c706212becc73b41a594ad6d9df307d8025489b700f734defa2d7b4b595921e677e4a562b338f92c1494695c46ebd7df906af7704fe2f3727f9292722f7baf4e2f3668f19f383dd76ae298d796bd834b58eaa0b9e1e0f7be781a096bb2e6007470283dc9c095b515bc2987baae2f06a628fc1963b5b2b9872edec82fd01010101010101010101010101010101010106bbc618c4b414ae829a2134c6373cb335b4fa4731ccdfd01507962a33b69269e76baf339f349aeb948b01ff3ba0d1aa88f18870b372e607d7ff0a8858936d909b5dd10d46c797f6520af8dfe0bf3b7f4a653734d637576eebe0c66195b4140e2d699045e3cae772b9b35a3b585cf72be673df0e9f4387f95f26d9335953460c7f4b090085e3b7bdbd13a5055d3e66b89e492b72fed4f5303b6b69cb45af2694188c4636b9cf360360b7288b83c2e9e60e70b0256ab9cbdbb3b00a369635a392e56c748dc60c1db343675f56d8ac7916b58c6785646bcba20082b72a5feda6e2d854b0b8b6461036ecb537b5ff4ab9b068658ec1a03baaddaccc556fc2dd4eed751d53c92e0e51c7c804233b6220a969b6499ac2dd4dd4db355be765530b7e926deaadf498ed6ec65dbab6da2e6e9a7c2c1babb634e7e1d88fba9b47279cb192acf695a8628f8e5ab9731176e8bdbc7b923cf9d976d7aa9ad6b1ae63859c48217b70fede3cfdb03371eaba39a5bcd9c00e8a7d157181cae8eb98e17b39b63db920f70fc3cac7e21c374b58f118f998a398e4e6e2c6877e4141b3a0202020202020202020202020202020202020a0e3488d470f5544c94534b2da063dcdbdcbce5b75fd454a3cc9c7585cd81d55661f2b835d4b1f856041bdcdc6dcec76560eb69c1778aee9940410b1139e9e270ddbe43e9a91fdd05786121d6e97455a6098ed65265a5a7a87c2f17c8e0330237b10bcdcdc332fe55e8e1e6b87f18edcf86f8d4f896133c3512f893c3210f36b6e2fb2f9df278fc2cd3dbc3c9e5bdae2788873c3dbbeb60bceeec32d0789adb9744db52356c7b0c748f0c00d89fbade392df4a4aba88703a88cca1d946f6e4ba49e5e9c6dd360c33e25e154cd0c8f339e0744bc397dc5c73c7f6d821f8ad3646f874c0696b92b1387b75dc7193e225654921cf847b2eb38ff00b66e53f48d2e332d6b33cad85edbdf302afe3a9328d6f13c66389ee6c51827653c36be5a534d8c484df28b745b9831966c2315b1b646a9e0cccdf5f8dc308bcad207653f1dacde593da0cbc4b4f50ef0a0cee75fa2d7e0b3bac4e596ea362c130f7576590b7e9f32e1965f4ef22c6be9bc27583751b2c4ae9515a2da95aae740438dd4d231d53c363375ac7bf4c655d635f526ab109de09b39e6d62bece18eb18f99965bcab0936161cb40ba4737d6fd6074544b70d5a505d606d026a773c00d75da2fa83a8bff009507b0fe0bcc5dc2d10989f1a37be945ae5a5ac712d3d3670f5b20ec34040404040404040404040404040404040418a4678aeb0739b948d5a7f0835de2da885d8a60b4d31fe1c333ebe622fe5644d3a9b7fa9cd5079ab8fb123895655d4e8595350e78783ab8126d7e9a251d72f7111b2236ff00dc71247d95102a358803a0248bf4e85158238cb1eeb816b345bba824f0fc542ce27a0388493b288540323a9c8120035f2df4ba995fe3da36fe05c6e2c378e311a264937cb5648f7446675df7bdc663d6cbc5f271f3e3994fa7af832f1cf4ed59636bc095a416f35f2e3e8fd3887365d47adc1dd46f157e234cd70cc40d16a34d5b13e1d662958cf19b78c8b382ebc79f8b9e78efa6af89702d6e0d880969607d4d3b4e62d68bb837af75ed99ccf1ede6cf8acee376c0a930cc4a060f0d84ba3bd88b1046ebc99cb131caa5c9c2747f28f7b1a41b9d41d42cef2d6e35f932974c753c1f30a08cb2a5e0168241093972fb6ff377ad3586f0c4cfa99592bf46bad75b99da65cbafa62aec3a970e9980d9c0b4efaad63e55c32ced42863a3a78de268835d62e6870d4f4b25c72da6eb5cad9a7ac8d91323f0c35dae9fd17a71931eea4e3cb24ec270364658dcb77bcdc9ecb8f2f36de8c38e47646114cca4847a5b65e1b76f46ba45c4260f94eab58f512fa56bddbadb1468b37a2ca552f11d7fc9504cfbf988b37d4af57c7c3cb291e6e5cf58b44c3e282513ba691cc7b599a3b0bdcdc6fed75f4f2ba78212b435f9ad6d2f65b895c23dd5a896e3703aa0d8a8a011e1f48f0e2dce5c6e06a1d7ff0a0f4f7c0cac74f435b0891cc64352ca86b1874707b32907aea2e83b81010101010101010101010101010101010101068d8ab61c6312e24131637e5a823a40e7dff0086e7ddfb0df767d9079dfe22e1dfba2aa5a30f7482095c1afc99448d048b8fca948ebd9e402999201f55fdb54106a85a036bdc1baa335142daf8e3619191ce346b9e6cd75b604f23d0ecb3e955f88d354515510e89ed76fb7457dc3d22435d352d6c75ac716cd1bc3da7b852e12e3e2be577b7a0f8578822c6b0d867610448dd47f29e617c2e5e3b865a7d6e2ce658ed66036105add86d65cebace98dedf986900edba8e8e34f442476a2faa9b5d2d62a601bad8380b0365e8e2cf5d33f7dbe52e0941565ce8ad054105ae700352bd3ee76bf8f1cbbd32c9c255987e17e0c30c925c926506f9afd4ac5e3bf4e77865cbab2a156d1e32ca76c7494e658d82ce2e1b2cde3dde999f1f2dff0026a336158e0aa9a47c391926a4f7db45bf1e96fc6b6aa2af0aaa7389a82d241f2db92d4eba5ff8baf75555f1b1a7f8a4388d07654f0c719d22434c247788e68207d3a2e79e7f4caef0ba46b32c8efa8af3e5e9b8bb7cf96316d805ce45daa6792eeb93bad316ed846aeecb48f93cc18c4918b5d7fc598a7cd557cb31d76467cdddcbeafc5e3f19e4f9fcf9eeea2923739873349076f65e9b257064d48b1d79aa8e4dfbaa248d5973d541b7d0cd29c0a9a110d9e250f6c807d408b5bd47f74d8f497c016c1f2158216915232898b8dc6523c9a7a8720ee1404040404040404040404040404040404041f1e486388dec834ec02315f8655d5981927ef0c4df2c81c0dfc363f283ed9059079f3e383fc3e34aba763a52ca56318dce2dfa41dba1d4fba9563ac6a9a3e5581ba1b5c8ee9f688d2d9b60e1769d3ee151f30d6649f23ac58eccd26dd469f9b2955131b05862ca5c016f5d120a73bad0daf8038a5d81e2229667914d3b86a4e8c775f75e3f97c3e73ca7b8f4fc7e5f1baaee515a256b5ed2355f1df4a54ca7703670d8ac56a55ad2d3e521d6b82a37133c2d08b69fd16f1a58aaab6cb13f3c2fcb30d40e4e5eac72d9865a45771c56d1e68aa73c3a5883b15d3cabbe370af8de3873e2633e62e2e74bec3bad4c933f1b76abafe3389d158cf716b5ba764f249646a189f14cb52e2da68dd63a5ca6d8cf39f4ad8e9a499d9ea0dddbd9632cfea3cf7df6990c21cf0d0000171caac5b42db372858aaf953306b728f7599222bdcecc775a6681e18d25585ad7389b1e6d0c0638c833bf468e9dd7afe3f179ddfd3cbcdcb319a8d13317b8971b93a93d57d4d3c0e6dd4d91192faa0e6cdd04a67d16ee836fc35de3e0f0da1d5add5c2fa10eb03daf7b7b227dbbf7f67f9aa3c7c4a0f378be1c6e24bb701c411b72cca2bbce37b5ed3670241b1b1d8f454724040404040404040404040404040404041f1e43584b8d85b528211a38c61f2d1471c8181a5a2ce2dcda7277f741e3ef89b24d5bc4f8b563e674e0d4be30e7bb5001200fb00a51a6d4b0b9a5a49b860d3a1b22a3d5c6d752b5cdbe6045fec9062a29324cc95c6d924682528fb8ec3ff4ad786e91bcb4ff006520d75f6be8b4388b92a2bb8784eae6770e50d448e748d7332971e441b2f8bf231933ba7d3e1cb78cdb67c32bc7882173bcc750bcf63bcadbb0d93300d37d3992b9d759569243999700dfb73495af6a6c522708c82cccdedb85de573d34cc55f50d26cf05a360f172ba4ba36d7aa6a64d6f0c7d2edd2eb5ba972d215cbb78d9ee12e49e4fa1876d07a053c8bdb2474ef90d8059b498a7c34ae8da34b3bbac55d2481918542a0d54a09b02ac62a2e71aaba65598be2ada484906efe4176e3e3b9572e4cf4ebca9a992b2774d338b9ce2bebe38cc66a3e6e595b775c02d239b741dd41cd54646799c104c65bc3efba8367c38bc61ecf0dcf66689cd200d0eb71f90aec77f7c00a22fc4e6ad8aa6394863993c62f99a1c059dd2c4b7f283bde26786c0de88473404040404040404040404040404040404182b182481d192066b0d4db9a054ceda782ef70b904374d09b13fd90788f8b6aa49714aa128687be5749e5d8926fa76455131c64cd98125c0f350629bca1a1a79ebf8411216e633b08d3366fca516f8b51f89493867301c2ff00cc05edef6527b1a5cd7b9160355a47c6b0786e39802069dd15dcbf0de9c56f04c6cb662d7bf4f75f1be57fe5afa1c17f8323cbe926cae24653e472e1a8f44e9b870de2cd9d81ae2338d085cec6f1ade280b6468b904735991da54a93088e769b1001e4ba632adbfb6bd8cf0735cd2e10803995befed26ab4dafe13f3386423a21e28b1f081d0ebd7456c4d473ffd2e23d72fadd45d3e0c26389d60db9b226986a29f29b01f7e4a6d9b1595923582c0a918b5532cb775b92d39daadafaf6c20b59abbfa2de18edcf2cbea35ac52573a191ee249b15ede1f6e1cb7a6b40af7bc6ca34d7eca0e4cea8395d54658f7051535a2c0fa2836bc06765450369cbb2491b5e07716b90ac4aee7fd9d2a1f0d6e20c8035b3783097b9d721cd12007f0541e8c541010101010101010101010101010101010106b5c4ae999879818c0ead71985190dbd9fe1b88dcef6b8b841e3ae2a2efdeb317dc1696020ef7b6bf94fb5550cac74258eb9b9cc4ed7e9f95291c6ac033343bca6e011f82822c768276e61a176570f7b20bd6932c7265b38060b77207fb158aad32ba8da6a24c8436e6e1a76f65d1942744f61f303d145774fc1b738f0e3984dc199f6fc2f91f37fcdf43e3ff82f38830b01c5ed032bb5f45e595dd454b53361b50d7b49d0fdc2b7b25d3b1302e228aa62610eec75d6eb163be196db5d262d1e5d5c34e6b72e9d75b6593138a4fa9c485af3261a564914157239c5c00e7dd48dd9a1f050d3c3e6b39c790feeb56cd3125b54b5d2c2e610c1af5536d6a450d44ec8ee19abbaa4672516215c184f9ae4ace9cb2ad6eb2a878848fa9dbae92386576aca9aa31b4b586eeeaae38b16ab6405c6e4fbae919b1518c1b53b80e7a2f5704edc39af4a26e87a9ebd17b5e47deaa8c8ddb6e483e83754678079c12341aa826904374dcd941b170dc90b2689af6e60f7ba3371b69a1bfdd48576bfc03aa8e878a6b1ad92cff939cdc9b016cae1f8056a23d4104cc9e2649190e6bc021c3622dba0c880808080808080808080808080808080804120d8d8a0815cd8dd5745e235ee7b1ce7820683ca41fea83c7ff1669a0878cf176420b62754bdcd040bdefdb95c941a4e671872916b3ef6b28af92c86683311e7173aa509c35f0c754c687024671be5d755059d0cfe0cf035e41639d624723cbfba94566294cd8ea5f192d6f98b7fe7f5fbabbfb1afd6d3cd1bce999bd41babb34ee3f836c73f861e40f336a1e40fb2f91f33ff0023e8707f8b7aab8454444117b85e395e8feda96234191ce16f295a88ad8aa6a30a973c6e3956baab8dd55ac3c5129612d96e4f22744b1e9c792589c38c1fe0b5a5c03b9d934d4cbb701c5af61395fbf7574be6c52f1739e6d9c91eaa696e68553c4f23868e0ae99b94564d8e3de08cdaf5e6afa73b9ab6a6bcbef6372ab86592b65949beba9dcab1cea23c667596d18a51941560a3c649301f55ece0f6f3737a52374217b1e5721aa0ca585ac692343b2035049845acde6752a09a7617ec82ef019bc0aba67924c21f77dc68d04ffe0a51dc7f04f2b7e204516569866a29331bdf336c413b73b0fb2acbd2f0b1b1c31b62368c06868dacdb6811591808b83736d8a0e48080808080808080808080808080808083054d2c53c904920bbe17e66103504823fa1283cbdf1f3048e8b8f6791b941ac8d939034173a1fc827dd0750b7590b49b1e60a83e86f90dedb907d94571a3bddf4a7464da0ed7d88f7456789cff00950cda660b66ea472ff9d54192bcc5594f14b2685edfaadfaba14828aaa9c48c2dca6ffa487075bdfa2bb1dbff0006a334fc3de1ca0e6333cf9b7e4be3fcbcb7c96c7d1e09663db7faba70c6f88c00b4ee3a2f24bb77d28710a7cc0d85c1e6568b1afd5d35896b85c244aa2aca37c44b9970b7b4dabdd51334ebaadcc9a99383aa5c7771f45658d79389a97f2253719f37174af7ed75369727ccce3ba9bda5c9f2d746589e3a2b118dcdca3bad411a7d1a6fbae98a55162edb40e3cc90bd7c17f93cdcd3a52b752bd8f2beb5059410b6580c6fdc0f2dbad9485436820eaa8934c33b8927985289937d6072b282c30aaa0c395da16b8b98795f441da9f02f19a1c2fe22d1b710aa3109227c10b87d0f73b40d71e9d0f5551eb48d803182321ac6ecd1b595191010101010101010101010101010101010107090d8037235dd0745fed27844a5f8762513091e13a3738347e937d7d89fb20f3ad700661235a05ec7dd0617792720ead70bfae8b2a8ae2580ea74d7edd1156b15447308ea08cb1cc32bc8d9b20dcfbeff0075918e461304b4c6d95de76bc6dea8d4ed4d1453cb5b144ebc6e2e17b73eeb19e5ac771ac31dd77670446fa7a125b67343ece6dbf2be4735ddedefc26a3748252e19492587dd70aea818852787ab2ee69e4770acbb55156400dc817037088aaa8a6b8ea3f21566a8eb6801376e8b42ae58e48c9b8b84951873f6554cc4f2b2bb66d72b752500deda22313b4eeb7a5918dfe5e84ab22588d237737b95b82871b23c222ebdbc3ede6e7f4a51c97ade47dd8a0b1a6c40b086becd0742e035b6c7f0869618e61b4ecc42a3e425865858d0e06375da4651723dd34910a8586dd6e566ab248ecd238dd51368e075534471819cb4b9bdc8dc7e1436bfe1c6c35b8c52c5296b0df2e779b024f5b7317baa95eb6e029388f06c230bc37106c388c4eb34544725df0c5fa738d9c34b020f4546f5e20bb728cc09b123920e680808080808080808080808080808080821e2e2f87cde5cda5ed7b73567b4be9a9fc44a2a7e22e049cbd8d7be36870ff41dbfe764d1beb6f1d5416b247c325c00e201e9d96558e58cbe363da333a3394f71ff002ea2a1d47d1e20d7f49ba2ca504e1b2184eb1bc825bdfb2cd54a631d9db046466be7889360f1cdbdbfca7d0c98643e26210c9ae406ce69e47b742bcdcdd47a38bdbb5f83256b18f8dc2fe637be975f33937b7b319d367746e87ccc77f0af6eedff0065cb6d3e493696900239382917daaaae0b12e66dd2cb53b36ad7303892db03fd5534c335345336ce6d8f50ab392be7c162703624144daa6af02cbab1df8556c56cb87cb1e849b750acace987e5f2732b43e3c902c002ac1c329b6deeaae98a404badf90aa54799b669b5cf72b719ad73173769d6e57b787dbcdcde950365ea799f7f52a8c8a0e51bdedfa5c45fa1545952bcb18e27a2ced631075dae7753a20b4c0647fceb5b1dfc4602e65b7b81a8f7d5117f494cc188c3534a32343da1ec775b0baa8f58fc31ac9314e16c29d246e7ba924315c1b16340362483af2041ecaa37fb736dae8afa2c75404040404040404040404040404040404186b6133d24b18ddcd364895a3e2f8d61fc338256bb169e18e096191be1bcf9a4241b068dcf4f75aaccaf2062203a692463c9cc4b87a73586d1609dc0ba179b922e1dfcc14aac12cae87eb05f1bf9a08ae0d3ab33348d8f752b5126490be26ca1c4027f89fe87ff00305156b825467a92d7b73380d4076aeee3aff50bcfcbe9db8dbe70dd68a69f21779c6b670b666ff90be7f2e1f71ebe3b5bf435176026c5a46dd579ac75ae335235d197c2ebb79b49d9136ae94e994dc1562abe6a5372e6380eca9b457ca5a4891aaef48c6e7b1db3adea89a439e6b036d558b55357239da0015674ae918e24dcaba181ed37e4aec6378248b15654dbe18f28bdf55a8ba57d5bec092ba6318cab5bc4ce6057b785e5e5bd2aecbd2f339b45cdcec8a137202a8cd0b2e7d104dbe58493cf40b3b5631c9bc9588c94355252d489a27963d9cd11d87c018ce19896394d4b88165399088cddd66cc4b80b03c8d8f3e8aa57a770fe119382788692bf0a748fc32567cbd5b1cebea4e8fe9d35f541bf45511cc3331c1cde441dd15cc97661a0cbd6e83ea02020202020202020202020202020c15b5f4b86d3baa2b2a22a785bbbe4706841d39c7ff1c83639a878749602329ac23cd7e79472f528cf93a5719c6ebb1d89d515f552d4cae680e748fcced151aa3ea5b93c325b6cc6cee9dbdd65a479691e4830bdb988bb43f6776ec506389cd9a17c3242e1236e0b6fcfd0a8a87246186edbe5efb84ab2b9c2e05ff506bc0b1e608f459ad2d701a71535e29dce6b1ce6bbc337d330170df7b587aaf37c8eb1dbaf15ef4d968aa7296f88482d370ee6c3dd79327a637bc1f131244d8def17d2ce3a5fb2f3e71da5598aa787ea07b15cf4d6fa268a2a902eecafe455db3dc419a1929cd9e2e0ece1b2ad6d02a5ae3ae9650e95d212093945d5ed10667b8ef64854099c4dd5d32872bada5f75b86d8c44e792360aa5edccc2221a28690e77817d574c56d53564a5e480bb62e76a8f101a5ba2f5f13cdcaad0dbaf43cee521c832ee5203069dca096c680d0a0e752fb9642396a507c2eb1f4feaac88c61f940039aa39194b4820d8a23b9fe167ed138b709b5984e3fe2e2f841f20ceebcd0376f293b8ec7eeaa3d43c1fc5980716d08acc06b63a981f67168779e37730e69d41515b081a6baa0fa0586880808080808080808080808083e39cd634b9ce0d03724a0d1f8c3e2c60fc38c7c148f6d7d6825b9187c8c3fea3fd8225ae86e31f8818bf13d4b9f59525ccbf96169b46cf40ae98db547033c84bae6ffd15d26d81edb09631a5f56a8dc69d5d33e091c0168d4df4d5469c69b140c2629985f1f32d3bf709a1631cac95ec7f8a5e2d60e70f301d0f5529b72ac8c3a46cb6cb9da2e46d7ecb31ada048c2d70b59c2d63d422c67a3718e46100b2406ed78fc2c65259db5dc6c94d3bdcd6ba57b73ef9c5f4d76217972e39f4ef8e6bec32b4c560e02461efa2f27271d8f4639b61a6ad25bfc297c48f6b3b76ae371749a59d3ca25d9e34fd37d5675576965ec2c2d779c74415f554919b98dd97b12ae8554d4c413e5b85748afa989e01b46aaaae7825773b0e8154b2a31a6633526e536923ec6d03b774562a9786b56a26d4f5526626db2e9233559337995db166a9b1216691b9257ab89e6e4f483a463abba2ef1c2b1d89372aed19e08f35dc76088cf1968bc8ed820c715dd2191dcd2c1c5efcceb8547dbdaee3e81118dc4917eab50728e421fba2362e1ce26c5b86aba3afc22be7a3a966cf89d6b8e84731d8a83d19f0e3f69fa6aa64587f1945e04c2cd15f0b7c8eeef6f2f51a268dbbcb08e20c271fa7151856234b591117bc32077dc7251560808080808080808080831d454c3491196a258e28c6ee7b8008346e21f8c381e14c73284babe7b6997460f528cdca3a8b89fe25637c42e736a2add141ada184e56fbf5f7559b5a5d454be626dcf7ba22be5cac203b577f45559611fc2cf6f33bca3b20c35510b0e56d0fa295635ac5a9192cb98e8f3adf93bfdd46a29a4a4c86db2aa93472782ed816f42951673bc3000d01d110096f459aa87318dccf158ecc5a75b8d6ca5549a7758c7245731c82e72ea3edc971cae9df1c771b1e1f21948f19a1cdb59b2374ca579f3cb5dedd263562ca60c032bc3afdad7f5532efd2cebda6d317c6e192473241bdace0570ce4fd3b635774af96519a48da0ff3342f3d9af4ed160d988003b2b8765958c533d8edb43d0aaa832bdc0583b44456d44ee174d2d57544e4f45a443b6776df741f65218cb0dd19d2aaa1ef91d6e4ba1a60922b34e8b519aadaacad07568f55d7195cedd4edaf62135c8ca0e5be848dd7b78b1d478f932da13afd17673648e2ced0766836254a330b121adfa476547c91f988899b0dd0709640c1e1b7527723976488c63f98abb07499b4e4aa1bff00541c49caed16a254fa57660a5131a88b6c271bc470899b350d5cf4f23750e89e5a47b841dcfc0bfb48e31857874bc4317ef4a5161e30369da3d7677ba9495dff00c29c738071a52f8f83d7c73102ef85de5919eaddd4697c80808080808226278b50e0f4cea9afa98e9e26f37bad7f4ea83ae38abe34d2d3c4fa7c09865948ff00f2241e56fa0e6519b93ab31ee35c5f1d738d7574b2826e199acd1e807a9559db5a9ab0bce84e9d4aa8c2e9330d0f3515c24718da2e42a8a991ee9aa0341fa9d608ab50c19c6ba345b4ea8584b197b481624fd94550d6c1678197336faf645555643620daddf915151a38493b688273622f739f7d09d826854623e252cd9e325847e54b1a89587540cf0d864046a1bc8dd78f93aaf671f71bae1900075b8beba735e3cebbc6cdf28c78639f1b0dc001cc1626c37f5ebd775e4b95e3efebff008e98e3b646e1cd0e0596f7dfeeb773b7ed7c5694d4afca07d3dbfb859daf4c7317b1c439a0db9f34d9a4596e7e927dd59daa34ce37b5d5d115f522f7049f6d1155d3650554af8d617dac9ed18aa59667f65b89501b197ca6dafaabb4bb60c4593005acdffd2ddbdd749949dd73b2df4a9385be69431cfcf6d5e6fa0edeab78f25ca6d9f0d7b53711b7254c718606358cd07baf6f07adbcbcded581849d6c07f55d9c598cc48b3800d1f4b40d02ba1c4b9cfd1a6dfd9070ce180867b941881b1b9d4aa839c5da5f44d20352a8e6101cdbb74e4ac467a27f9ec528b68dbb68a0971c3702c1546611168bdd444fc2b1aaec16b63aca0ab9a9aa63376c913882151e92f855f1e69f889d0e0fc48e8e97107599154fd31ce7a1fe577e0ace9a95dc88a2020f8f7b636973dc1ad02e493601075a719fc63a4c30cb458206d554016f9826f1b4f6ebfd1566d750635c4988e393fcc621592cf272cc746fa0e4919da8e6a9b0dfeea9a467ca4db43aa221cef734970d3fba2e9f219b3bad7bebcd063aea90c61d6e7aa08f8506bcbe771d1b7b2516b13accd742753a283ec803c6fba2ab6a98002d194f2f545954b58d20643ab41ba0c50c563a6c826c42c7ca36fca0aac6a06beceb6504dcebb052b51130593c6a97823f5020741d178fe44d6abd9f1eef71da7835187c6d163b6857832af5c8daa930ff001a2f0dccbe96bf55c726dcfe49f48fcb334961fa5c3fe6ebcf65e3efe9d277dfda741110c02d71b83d42dcb2fa67246ac86f7bb16e32a69dae693669f755a88af6c875b157621cecd6c422e905d4c647f41ceeaa5496d3863340414da6902b63b36db2b0d33505132280ccf161fcc7fb29965aecd768b5114b57711b43233a66b6bedfe54c65cbbcbd2dc75e986aa921c330f9277b00644dcc4ffce6bd387f2ba8e19f536eb6c4ab5f5b52fa994ddce3a0e83905f530c7c66a3e76596eeea2eaee816d8a5dadd4f98a2b8b9e48e839008380b9d5542df741f6da20e602a8e594a0e6c6eaaa3e35a62982a8bda521f1b4ac8c93d6369dba7d5654d217ef19657684a1a4f873d8179dd544a8a62c208241083d0ff04fe367ccba0e19e24a8fe21b3292b243f57463cf5e85634d4aefb451079fbe22fc549f88e47e1f8648f830d6920906ce9fb9e83b2b2316bae5d517dcdecab2c2e989beba208d2484dbba0fb14995b728315636f182dd7d10554550e8deed79dc22b0d555789e5282de8e31052c74ff00a9dabf4f7412cb3cde677e765158e43a9ca351cfaa0893b6ed24dc7b20a7ac68cc6c2fc915c69c58dbb6c86d3a3639ae171dedd3ba0a8e208806b80b1b0be88b15fc331e7ad3d9cdbfa15e7e7c77857a3832d671dcd8261f2081ae3baf9397b7d58dbb0d85c1a2e2c4735cb26b5166e8592b724ad696f3d375cfb5d22c987cb4873c03c6849d58771e8571d5c3bc7fe8baa8ce81b50d2e84e6b685a46ad3dd76c73997718b348535106dcb9a6e3b2dc1595106f945bb95a6a456544361cae7a22e88286c333858a316becf096b4b5adb9ea5522a64a46ba60f9ef941d1a3f525cf5ed7c5651d0996cfa8168c7d11f2f75892def25f5e9f24a704ec005d11a3fc49c41b0d2c386b24f3c8ef12400ecd1b5fdffa2f77c4c3bb93c5f2f39af18d09ec05a799b2fa0f001be5055185ecb20c762e3641f6dc87fe507200a0fa1a88e41b6f554730db9eaa0ccc8c9565473a9880843eda85513b0e7de99e4fe90a515b512ba79b28d6ea8b6a4a314f1b5cf1725066325f91440cbb5954ac9154963839ae20837bf441ea1f809f177ff52d2b386b1a9ef8940cff00a799e75a860e47fd43f2162b71dd08af159a8cd7b95a72d31f8da6ff0094191a411986be88b181e4d8916077d507195c3c2363b745046a5aece1d09f3686ca8aa9f344f7070d4f4418e81a6aabc171b4510cef3e8a8bd865f1def95a73007282a092c97cb6f6508e4d70ce1c5adb8fd24685518248cb1aed483e9b28aaaaa05ce19b6b5b6b22c626001fa0bf6413a30dc97bf987e511518c3039a401cb745883c2d17895b53166cae315c1e962b366dadbbdf81aa23c4b078cbdcd3345e492dd42f8fcf87865a7d5e2e4f29b8dc61a56e416fc2f357a717231db4596df7365006bd9349a40a98dad7ba58981b211b85cb2e3ddde37549faac51d4c7541cd70cb20fa81570e4df57aacdc74aea9c31b512794d82ef2b53a479301d34779bad925d2796ab98c31918170494db37b56626f8e03e146dcd23b40d0b173fa9ed64e91a9b0ccae134e3349c80d9ab531d777d96b3bd96be8b5a1598be210e1741355cd60c8da5d6ea7905d38f0f2be318cf3984b5d238a56cd8a564b5950ebba437f41c82fb18e3319a8f8f96572bbac320b47e5dcadb0fb0eb18e7a2a38cb16e8a8ee6d8ec803d1072010730dba239861279a0cac855199a1acb34ea4f21a944719a3a998105ad8e368d6e75288cd4aec9874aee66c1511f098c4b5799d6b375516ae247fa1088c0e79e46caa385f920f99c8545860f8b556155d4f5d4533a1a8a790491bda6c5ae1a8507b77e19f1c53f1f70a52e2b196b6a40f0aaa31fa25035f63b8f5596a3c97330c40389d2e16986073c58db6083251d40958e65f51aa5185d53964f0ddb8d3541933127dadaf441493caea4ae26f604f228ab0c42315146d9d80e6e7a282969b128e8a0a889ceb48f734b79e6b696fcad546d38641e1d2b43c804b6feea0e6632c79edf9ec83eb45c0b589bee507295a4b0ee795d162aeaa33a17136e814111bac81b6398d8d822a7c4192479763df92115b8a37331d73adb6eca0a9e1f3e0637130dc78c1d1fb945addf8638a61e1fc45cea47b9fe23f2cd03cfd7e9d085e7e7e19c935f6edc5cb70ff004eecc1b17a7c4e8e39e99e1f1bc5c1e87a1eebe3e785c32f1afadc79cca6e27484917b7d961d654794fdd454579e44a25629a823a91985daf1b386f6e8b171997b25d31c334b46ef0ea62323793da351ea398f453771f7db562716c2f8c48c963208bdefc974f29adb17fb53e215648f0e1f283a075b577fda3fbac795cbd7a34894d8608c19a4facec372175c7193d336efa7095841dbb2d1a4599807aad43e9d67f12f13f125870d63b46ff1241d4f20bdff00178fff007783e5e7ff00ab42735b701dcf92f6bc4fb337f85e5160aa31d37d2477bfdd5191c2fa1e6830c918d50630db20c8d6dfd50640c1cc8083eba78a3b3735dc74b04022a1f308434440ee4eeaa278647451d9a2ef3bb8ea49418a124b65793a108384a7c3c34f2bb9070c1f40e77542a7bdfae9b2230b9d73d4aa8c8c69f5418a5392e9073a53985f92a3b77f678e3b3c2fc64dc2ea66cb418ada17027464bfa1dfdbdd62ac6b959501ae644e03ce3f2b4cab9ce22e093a69ba0830d61a5ad01c6c2e8a998a6ed9e3d9dadfa223e5355079b1bdac39a22263919cad9875e48d44dc0a515541342e3adb4506af8a44e867f28f330dec552369e1fe24a1af6b2195eda6a91a6579b35de853458be963b83a003aa222981ecb116b5b40a0fa1da652425186a60192e05cdb4bf4548ab21ec95b95e5b90dc38722a35122175dd90f9b3ee4f550629e173c9696f3b7554f4a782214d8dd212c17f186bd354540c45af8b1a7e5b34f8c7faacfdafd3b03e1e7c428f0198e138b35d0c32bf3b2771b88dc40163d8db75e2f97c172fe51ebf8dcd31fe35dd54788c553136463c39ae17041b870ea0af9963e8ef7e9ca598004dc1e8b3a749da3b9d9ec6ff6454881a2db2ce8d243a9a37b4070f7e61556a98ed5ba8715a782085b345a99a4cba46fe40fb107ecb3ac7fed25dd4ba6a6123bc691de23cec7b765d274ce490f8acce8ac665429e30d074d792ba45363156ca0a39aaa5fa626171efd975c31dd92339e5319bae8dc5eba4acaa9aa6520cb2b893dbb05f630c663351f1f3cae57755195e5d9b90fc2d32ccd68f9575b53beea8c50380000e841419c32e2e76418a496267d4f6dfa0d50457d647721a094d2b19ad79072b40546274f2bf7711e8a89385c79ead848be5d566a2fe587c56e66db3b750888d54f2f683f71dd536cad68f9275b74888b8812da08dbd75458e3859b466dcd42a73858125518e069966006a15a89ed832837082aeb5de7210d26d0457a72e551c193ba1a96be379639a416b81d411cd41b4638e708a29d9fa39ab118c3c5444d9db7b386beaa51558c46632d976454fa19857e1845fcf1ea9457894c329d5513710225c3aff85047e19a82c95ed1adf4528e389520f9a70b01d55224e1fc15162110a99cb981ff00435bbdba95176fb59418c70dc65d415ef9616fd514a33009b4e9069fe233dbe4acc3d8eb685d13adf837557c561171c60d523f886a2079fe765c5fd9346aa553f11e1550f6b3f79d3301dcbee2df844d561756d0c9ac7554ced74fe284d2b9ba4a775f2cf0bafad9b20d3f2a232020dc00c26c2ce0f0820d6535ab6925d359997d6fcd2ac51712034f8a4b2c45e0879209f5596a32e2d88fcc984b636b9e58d2e36d2f64a91b9700f1a4b8046292a9d21a17b8643a9f04f3ff00ebd978fe47c7f2fe58fb7b3e3fc8f1fe397a76ed3570ab89b232ce69008734e857cdb3b7d3c6c4989b9bcc4f62166c74dfd2ca94b4b6c05edccac585962c2998c9a6644e2e19c9b068b93617b058caebbace596a6d43c59844f5b8b51e1168a9e79e3f1a9cc7a87b85f47bb99d08e402e19ce4c7c7935ed38b3965cf7e90f09a8cb11a69da629e1395ec3d6d7bfd8dd7a78f39c98cca194ed9e6783cae02e921a40a87d8126cba6934eb2e3de23f19eec3299dfc369bcaff00e63d17bfe2f16bf9d7cff95cdbbe11d772b0c86f65ed78588c37fe19765efd5071616bb347bf948d9515d23df0876576a3548ba616bea2a9e199dc6fc82519e5c3df0b33687aa0881baeca89b454a26780ed94448aac3580f9458f55449c3a99b08be849e68956319b1b1418ab29eec2f60bf32846280e7a47762a0878bf96089a7a2a473c2c0f0c2854a9df616e6aa2460f0f8925f41ea854faf69819637161b2446b552fcf35ba95557f471e4a6681b86e63d91954cb21350493724ea8adba39a2afa39202e199a36e69fda2b707a9f0677d24a7ca4e97e4ad13712a4f1a07b2daeb6ecb3b553e0157f2f56607e8363754ae78ac469ea5fdce88274169f0c90589b3740a0afe1e7e4ac23ba2b62a6c3be7f1174f30ff00a78ac5fa7d67f947f74da360f1ac6f60d2750db72511aef16d7b696864f35de41d556a47576ae24f555a4865307b41d8a82cb08c09f5a2675810de764a6d1313c34d193768b750928ad03a2aae4dcc39bbeea2360e0c024c6a36ccf7656b4b9a09b80e046bec9ed3267e21a7aa86a2613f9ce63a8d9648c94b3ffd0c4ef09b6cb6248d490ad54aa67545444e1a06051179c2bc6559c2d56d8def92a285c7cf0937cbddb7dbd179b9fe3ccfb9ede9e0f9170babe9ddb81e27458e51b2ae86664b13f98dc1e87a1ecbe5e785c6eabeb619cca6e55dc6ccbe66e8173ad546ac964a69a9ea185c0b5fb8fbff006b7baf37cac77c7a2f6b3750d253e2988714c85cd0da5cd4cdcc2f98b6d9bd4837b775e3ff009573c3c24efd4fff005cfb9261ff006ea8c271d9eab89ab44d29941219989bdcb45bfdbd97d0f8d85c7098baea78edb6c8f716e6b72d97a1648d638b71c38661d76f96a26bb631cc7577b2f47c7e3f3cbfa79fe572fe3c7af75d4156e74af3e63a9bdc9d495f5a3e2ed8bc2b37ae88214ce6dcb1c35dae82131ff2d2b9c6c7436baa20d5bc38970e68a9182301a82e3c85912acab1a002391082a4d39f134dae8ab1a78fc16dd1134813335dec830c47c296c5544c2398d3450658dc0b4b6f71d1111bc2f0a521bf449a7ba0acc77ca6261dc05563361de5801b215ca425cff5416d42cc91374209465c7159dd903493a0e68aa1a76f8f58c60d6e5536bf6c80433cbfa5a320559d28defbcd70a457ffd9, 'asd@sjhb.jcv', 'cc72e46894d55d5585f02bfd0892d22d99b871fed2730ec2d496a8de316d9641', 'ENpê3T0×±#\n	4\Zd¥/å¤¬—©2Øô‹[@)', 1, NULL, 'Chief', 0, 0, NULL, 'Active', '5ea69605c2283', 1, '2020-04-27 16:21:25', 0);
 INSERT INTO `user` (`userID`, `firstname`, `lastname`, `nickname`, `jobposition`, `profilepic`, `email`, `password`, `salt`, `corporateID`, `companyID`, `role`, `admin`, `becomesupervisor`, `yoursupervisor`, `status`, `vkey`, `verified`, `time`, `superadmin`) VALUES
 (34, '', '', '', '', NULL, 'vvbsd@fbdf.cfh', '', '', NULL, 18, 'Superior', 1, 0, NULL, 'Active', '5ea6e2daef076', 0, '0000-00-00 00:00:00', 0),
-(35, 'ddv', 'ddv', '', '', NULL, 'dvdv@asklsa.cm', '', '', NULL, 19, 'Superior', 1, 1, NULL, 'Active', '5ea7f306d9e55', 0, '0000-00-00 00:00:00', 0),
 (36, '', '', '', '', NULL, 'DF@DFGHJ.GHJK', '', '', 5, NULL, 'Chief', 1, 0, NULL, 'Active', '5eaf75cebcee4', 0, '0000-00-00 00:00:00', 0),
 (37, '', '', '', '', NULL, 'ertyu@kajcb.kcb', '', '', 6, NULL, 'Chief', 0, 0, NULL, 'Active', '5eaf760bb008c', 0, '0000-00-00 00:00:00', 0),
 (38, 'dvsdv', 'dsvdsvs', '', '', NULL, 'dvsdv@fbdb.dv', 'dc07d8cbf4b5aa69405d491506ae13adb40b38014a19f6d6fdc819142b08831d', 'SÍL¾@©:ôÿ‡4U@¤£çÇ÷×]ˆÝéš8õ^', 7, NULL, 'Chief', 0, 0, NULL, 'Active', '5eaf7640b5ae7', 1, '2020-10-15 13:24:53', 0),
@@ -1912,7 +3256,9 @@ CREATE TABLE `user_session` (
 --
 
 INSERT INTO `user_session` (`id`, `user_id`, `hash`) VALUES
-(0, 7, '5fffad3c7b380');
+(0, 7, '5fffad3c7b380'),
+(0, 3, '601baa8e8a596'),
+(0, 4, '602db80b1994b');
 
 --
 -- Indexes for dumped tables
@@ -1922,9 +3268,7 @@ INSERT INTO `user_session` (`id`, `user_id`, `hash`) VALUES
 -- Indexes for table `adddeduct_leave`
 --
 ALTER TABLE `adddeduct_leave`
-  ADD PRIMARY KEY (`AddDeductLeaveID`),
-  ADD KEY `foreign_deduct_leave` (`leaveID`) USING BTREE,
-  ADD KEY `foreign_deduct_employee` (`emp_id`) USING BTREE;
+  ADD PRIMARY KEY (`AddDeductLeaveID`);
 
 --
 -- Indexes for table `adhoc_payroll_item`
@@ -1977,8 +3321,7 @@ ALTER TABLE `applyleave`
 -- Indexes for table `bank`
 --
 ALTER TABLE `bank`
-  ADD PRIMARY KEY (`bankAcc_id`),
-  ADD KEY `foreign_bank_employee` (`emp_id`) USING BTREE;
+  ADD PRIMARY KEY (`bankAcc_id`);
 
 --
 -- Indexes for table `bik`
@@ -2014,8 +3357,7 @@ ALTER TABLE `bonus_employee`
 ALTER TABLE `claim`
   ADD PRIMARY KEY (`claimID`),
   ADD KEY `foreign_claim_type` (`claimType_id`) USING BTREE,
-  ADD KEY `foreign_claim_employee` (`emp_id`) USING BTREE,
-  ADD KEY `foreign_claim_balance` (`claimBalance_id`);
+  ADD KEY `foreign_claim_employee` (`emp_id`) USING BTREE;
 
 --
 -- Indexes for table `claimbalance`
@@ -2097,8 +3439,7 @@ ALTER TABLE `department_employee`
 -- Indexes for table `emergency_contact`
 --
 ALTER TABLE `emergency_contact`
-  ADD PRIMARY KEY (`ec_id`),
-  ADD KEY `foreign_emergency_employee` (`emp_id`) USING BTREE;
+  ADD PRIMARY KEY (`ec_id`);
 
 --
 -- Indexes for table `employee`
@@ -2107,18 +3448,22 @@ ALTER TABLE `employee`
   ADD PRIMARY KEY (`emp_id`);
 
 --
+-- Indexes for table `employee_allowance_deduction_bik`
+--
+ALTER TABLE `employee_allowance_deduction_bik`
+  ADD PRIMARY KEY (`adodbik_id`);
+
+--
 -- Indexes for table `employment_detail`
 --
 ALTER TABLE `employment_detail`
-  ADD PRIMARY KEY (`empdet_ID`),
-  ADD KEY `foreign_employment_employee` (`emp_id`) USING BTREE;
+  ADD PRIMARY KEY (`empdet_ID`);
 
 --
 -- Indexes for table `epf`
 --
 ALTER TABLE `epf`
-  ADD PRIMARY KEY (`epf_id`),
-  ADD KEY `foreign_epf_employee` (`emp_id`) USING BTREE;
+  ADD PRIMARY KEY (`epf_id`);
 
 --
 -- Indexes for table `groups`
@@ -2139,13 +3484,6 @@ ALTER TABLE `group_member`
   ADD KEY `foreign_member_group` (`group_id`);
 
 --
--- Indexes for table `income_tax`
---
-ALTER TABLE `income_tax`
-  ADD PRIMARY KEY (`incometax_id`),
-  ADD KEY `foreign_income_employee` (`emp_id`) USING BTREE;
-
---
 -- Indexes for table `invite_user`
 --
 ALTER TABLE `invite_user`
@@ -2160,6 +3498,18 @@ ALTER TABLE `leavebalance`
   ADD KEY `foreign_leave_employee` (`emp_id`) USING BTREE,
   ADD KEY `foreign_leave_apply` (`applyID`) USING BTREE,
   ADD KEY `foreign_leave_deduct` (`AddDeductLeaveID`) USING BTREE;
+
+--
+-- Indexes for table `leaveinformation`
+--
+ALTER TABLE `leaveinformation`
+  ADD PRIMARY KEY (`LeaeinfoID`);
+
+--
+-- Indexes for table `leave_group`
+--
+ALTER TABLE `leave_group`
+  ADD PRIMARY KEY (`LeaveGroupID`);
 
 --
 -- Indexes for table `leave_type`
@@ -2196,18 +3546,22 @@ ALTER TABLE `loan_employee`
   ADD KEY `foreign_loan_employee` (`emp_id`) USING BTREE;
 
 --
--- Indexes for table `other`
+-- Indexes for table `optional_deduction`
 --
-ALTER TABLE `other`
-  ADD PRIMARY KEY (`other_id`),
-  ADD KEY `foreign_other_employee` (`emp_id`) USING BTREE;
+ALTER TABLE `optional_deduction`
+  ADD PRIMARY KEY (`OptionalDeduction_id`);
 
 --
--- Indexes for table `other_info`
+-- Indexes for table `optional_deduction_employee`
 --
-ALTER TABLE `other_info`
-  ADD PRIMARY KEY (`otherinfo_id`),
-  ADD KEY `foreign_otherinfo_employee` (`emp_id`) USING BTREE;
+ALTER TABLE `optional_deduction_employee`
+  ADD PRIMARY KEY (`OptionalDeduction_eid`);
+
+--
+-- Indexes for table `other_information`
+--
+ALTER TABLE `other_information`
+  ADD PRIMARY KEY (`otherinfo_id`);
 
 --
 -- Indexes for table `overtime`
@@ -2227,7 +3581,7 @@ ALTER TABLE `overtime_employee`
 -- Indexes for table `parrears`
 --
 ALTER TABLE `parrears`
-  ADD PRIMARY KEY (`pArrears_id`);
+  ADD PRIMARY KEY (`parrears_id`);
 
 --
 -- Indexes for table `parrears_employee`
@@ -2238,11 +3592,22 @@ ALTER TABLE `parrears_employee`
   ADD KEY `foreign_pArrears_pArrears` (`pArrears_id`) USING BTREE;
 
 --
+-- Indexes for table `payinfo`
+--
+ALTER TABLE `payinfo`
+  ADD PRIMARY KEY (`payinfo_id`);
+
+--
 -- Indexes for table `payroll_history`
 --
 ALTER TABLE `payroll_history`
-  ADD PRIMARY KEY (`payroll_history_id`),
-  ADD KEY `foreign_payroll_payroll` (`payroll_id`) USING BTREE;
+  ADD PRIMARY KEY (`payroll_history_id`);
+
+--
+-- Indexes for table `payroll_info`
+--
+ALTER TABLE `payroll_info`
+  ADD PRIMARY KEY (`payinfo_id`);
 
 --
 -- Indexes for table `payslip`
@@ -2255,15 +3620,19 @@ ALTER TABLE `payslip`
 -- Indexes for table `socso`
 --
 ALTER TABLE `socso`
-  ADD PRIMARY KEY (`socso_id`),
-  ADD KEY `foreign_socso_employee` (`emp_id`) USING BTREE;
+  ADD PRIMARY KEY (`socso_id`);
 
 --
 -- Indexes for table `spouse`
 --
 ALTER TABLE `spouse`
-  ADD PRIMARY KEY (`spouse_id`),
-  ADD KEY `foreign_spouse_employee` (`emp_id`) USING BTREE;
+  ADD PRIMARY KEY (`spouse_id`);
+
+--
+-- Indexes for table `taxexrule`
+--
+ALTER TABLE `taxexrule`
+  ADD PRIMARY KEY (`taxex_id`);
 
 --
 -- Indexes for table `user`
@@ -2293,19 +3662,19 @@ ALTER TABLE `adhoc_payroll_item`
 -- AUTO_INCREMENT for table `advance_employee`
 --
 ALTER TABLE `advance_employee`
-  MODIFY `advance_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `advance_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `allowance`
 --
 ALTER TABLE `allowance`
-  MODIFY `allowance_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `allowance_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `allowance_employee`
 --
 ALTER TABLE `allowance_employee`
-  MODIFY `allowance_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `allowance_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `applyleave`
@@ -2317,31 +3686,31 @@ ALTER TABLE `applyleave`
 -- AUTO_INCREMENT for table `bank`
 --
 ALTER TABLE `bank`
-  MODIFY `bankAcc_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `bankAcc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `bik`
 --
 ALTER TABLE `bik`
-  MODIFY `bik_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `bik_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `bik_employee`
 --
 ALTER TABLE `bik_employee`
-  MODIFY `bik_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `bik_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `bonus`
 --
 ALTER TABLE `bonus`
-  MODIFY `bonus_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `bonus_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `bonus_employee`
 --
 ALTER TABLE `bonus_employee`
-  MODIFY `bonus_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `bonus_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `claim`
@@ -2356,16 +3725,22 @@ ALTER TABLE `claimbalance`
   MODIFY `claimBalance_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `claim_type`
+--
+ALTER TABLE `claim_type`
+  MODIFY `claimType_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `commision`
 --
 ALTER TABLE `commision`
-  MODIFY `commision_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `commision_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `commision_employee`
 --
 ALTER TABLE `commision_employee`
-  MODIFY `commision_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `commision_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `company`
@@ -2383,19 +3758,19 @@ ALTER TABLE `corporate`
 -- AUTO_INCREMENT for table `cp38_employee`
 --
 ALTER TABLE `cp38_employee`
-  MODIFY `cp38_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `cp38_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `deduction`
 --
 ALTER TABLE `deduction`
-  MODIFY `deduction_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `deduction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `deduction_employee`
 --
 ALTER TABLE `deduction_employee`
-  MODIFY `deduction_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `deduction_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `department`
@@ -2413,25 +3788,31 @@ ALTER TABLE `department_employee`
 -- AUTO_INCREMENT for table `emergency_contact`
 --
 ALTER TABLE `emergency_contact`
-  MODIFY `ec_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ec_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `employee`
 --
 ALTER TABLE `employee`
-  MODIFY `emp_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `emp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `employee_allowance_deduction_bik`
+--
+ALTER TABLE `employee_allowance_deduction_bik`
+  MODIFY `adodbik_id` int(50) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `employment_detail`
 --
 ALTER TABLE `employment_detail`
-  MODIFY `empdet_ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `empdet_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `epf`
 --
 ALTER TABLE `epf`
-  MODIFY `epf_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `epf_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `groups`
@@ -2446,12 +3827,6 @@ ALTER TABLE `group_member`
   MODIFY `group_member_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
--- AUTO_INCREMENT for table `income_tax`
---
-ALTER TABLE `income_tax`
-  MODIFY `incometax_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `invite_user`
 --
 ALTER TABLE `invite_user`
@@ -2464,6 +3839,18 @@ ALTER TABLE `leavebalance`
   MODIFY `leaveBalanceID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `leaveinformation`
+--
+ALTER TABLE `leaveinformation`
+  MODIFY `LeaeinfoID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `leave_group`
+--
+ALTER TABLE `leave_group`
+  MODIFY `LeaveGroupID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `leave_type`
 --
 ALTER TABLE `leave_type`
@@ -2473,67 +3860,85 @@ ALTER TABLE `leave_type`
 -- AUTO_INCREMENT for table `levy`
 --
 ALTER TABLE `levy`
-  MODIFY `levy_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `levy_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `levy_employee`
 --
 ALTER TABLE `levy_employee`
-  MODIFY `levy_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `levy_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `loan`
 --
 ALTER TABLE `loan`
-  MODIFY `loan_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `loan_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `loan_employee`
 --
 ALTER TABLE `loan_employee`
-  MODIFY `loan_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `loan_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT for table `other`
+-- AUTO_INCREMENT for table `optional_deduction`
 --
-ALTER TABLE `other`
-  MODIFY `other_id` int(20) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `optional_deduction`
+  MODIFY `OptionalDeduction_id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
--- AUTO_INCREMENT for table `other_info`
+-- AUTO_INCREMENT for table `optional_deduction_employee`
 --
-ALTER TABLE `other_info`
-  MODIFY `otherinfo_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `optional_deduction_employee`
+  MODIFY `OptionalDeduction_eid` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `other_information`
+--
+ALTER TABLE `other_information`
+  MODIFY `otherinfo_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `overtime`
 --
 ALTER TABLE `overtime`
-  MODIFY `overtime_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `overtime_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `overtime_employee`
 --
 ALTER TABLE `overtime_employee`
-  MODIFY `overtime_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `overtime_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `parrears`
 --
 ALTER TABLE `parrears`
-  MODIFY `pArrears_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `parrears_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `parrears_employee`
 --
 ALTER TABLE `parrears_employee`
-  MODIFY `pArrears_eid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `pArrears_eid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `payinfo`
+--
+ALTER TABLE `payinfo`
+  MODIFY `payinfo_id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `payroll_history`
 --
 ALTER TABLE `payroll_history`
-  MODIFY `payroll_history_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `payroll_history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT for table `payroll_info`
+--
+ALTER TABLE `payroll_info`
+  MODIFY `payinfo_id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `payslip`
@@ -2545,13 +3950,13 @@ ALTER TABLE `payslip`
 -- AUTO_INCREMENT for table `socso`
 --
 ALTER TABLE `socso`
-  MODIFY `socso_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `socso_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `spouse`
 --
 ALTER TABLE `spouse`
-  MODIFY `spouse_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `spouse_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `user`
@@ -2562,13 +3967,6 @@ ALTER TABLE `user`
 --
 -- Constraints for dumped tables
 --
-
---
--- Constraints for table `adddeduct_leave`
---
-ALTER TABLE `adddeduct_leave`
-  ADD CONSTRAINT `foreign_deduct_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_deduct_leave` FOREIGN KEY (`leaveID`) REFERENCES `leave_type` (`leaveID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `adhoc_payroll_item`
@@ -2591,14 +3989,14 @@ ALTER TABLE `adhoc_payroll_item`
 -- Constraints for table `advance_employee`
 --
 ALTER TABLE `advance_employee`
-  ADD CONSTRAINT `foreign_advance_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+  ADD CONSTRAINT `foreign_advance_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `allowance_employee`
 --
 ALTER TABLE `allowance_employee`
   ADD CONSTRAINT `foreign_allowance_allowance` FOREIGN KEY (`allowance_id`) REFERENCES `allowance` (`allowance_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_allowance_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+  ADD CONSTRAINT `foreign_allowance_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `applyleave`
@@ -2608,39 +4006,25 @@ ALTER TABLE `applyleave`
   ADD CONSTRAINT `foreign_apply_leave` FOREIGN KEY (`leaveID`) REFERENCES `leave_type` (`leaveID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
--- Constraints for table `bank`
---
-ALTER TABLE `bank`
-  ADD CONSTRAINT `foreign_bank_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
 -- Constraints for table `bik_employee`
 --
 ALTER TABLE `bik_employee`
   ADD CONSTRAINT `foreign_bik_bik` FOREIGN KEY (`bik_id`) REFERENCES `bik` (`bik_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_bik_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+  ADD CONSTRAINT `foreign_bik_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `bonus_employee`
 --
 ALTER TABLE `bonus_employee`
   ADD CONSTRAINT `foreign_bonus_bonus` FOREIGN KEY (`bonus_id`) REFERENCES `bonus` (`bonus_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_bonus_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `claim`
---
-ALTER TABLE `claim`
-  ADD CONSTRAINT `foreign_claim_balance` FOREIGN KEY (`claimBalance_id`) REFERENCES `claimbalance` (`claimBalance_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_claim_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_claim_type` FOREIGN KEY (`claimType_id`) REFERENCES `claim_type` (`claimType_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+  ADD CONSTRAINT `foreign_bonus_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `commision_employee`
 --
 ALTER TABLE `commision_employee`
   ADD CONSTRAINT `foreign_commision_commision` FOREIGN KEY (`commision_id`) REFERENCES `commision` (`commision_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_commision_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+  ADD CONSTRAINT `foreign_commision_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `company`
@@ -2659,7 +4043,7 @@ ALTER TABLE `corporate`
 -- Constraints for table `cp38_employee`
 --
 ALTER TABLE `cp38_employee`
-  ADD CONSTRAINT `foreign_cp38_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+  ADD CONSTRAINT `foreign_cp38_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `deduction_employee`
@@ -2667,7 +4051,7 @@ ALTER TABLE `cp38_employee`
 ALTER TABLE `deduction_employee`
   ADD CONSTRAINT `foreign_deduction_deduction` FOREIGN KEY (`deduction_id`) REFERENCES `deduction` (`deduction_id`) ON DELETE SET NULL ON UPDATE SET NULL,
   ADD CONSTRAINT `foreign_deduction_deductionr` FOREIGN KEY (`deduction_id`) REFERENCES `deduction` (`deduction_id`) ON DELETE SET NULL ON UPDATE SET NULL,
-  ADD CONSTRAINT `foreign_deduction_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
+  ADD CONSTRAINT `foreign_deduction_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `department_employee`
@@ -2675,24 +4059,6 @@ ALTER TABLE `deduction_employee`
 ALTER TABLE `department_employee`
   ADD CONSTRAINT `foreign_department_department` FOREIGN KEY (`department_id`) REFERENCES `department` (`department_id`) ON DELETE SET NULL ON UPDATE SET NULL,
   ADD CONSTRAINT `foreign_department_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `emergency_contact`
---
-ALTER TABLE `emergency_contact`
-  ADD CONSTRAINT `foreign_emergency_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `employment_detail`
---
-ALTER TABLE `employment_detail`
-  ADD CONSTRAINT `foreign_employment_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `epf`
---
-ALTER TABLE `epf`
-  ADD CONSTRAINT `foreign_epf_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `groups`
@@ -2709,12 +4075,6 @@ ALTER TABLE `groups`
 ALTER TABLE `group_member`
   ADD CONSTRAINT `foreign_member_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`groupID`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `foreign_member_user` FOREIGN KEY (`member_id`) REFERENCES `user` (`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `income_tax`
---
-ALTER TABLE `income_tax`
-  ADD CONSTRAINT `foreign_income_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `invite_user`
@@ -2745,54 +4105,24 @@ ALTER TABLE `loan_employee`
   ADD CONSTRAINT `foreign_loan_loan` FOREIGN KEY (`loan_id`) REFERENCES `loan` (`loan_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
--- Constraints for table `other`
---
-ALTER TABLE `other`
-  ADD CONSTRAINT `foreign_other_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `other_info`
---
-ALTER TABLE `other_info`
-  ADD CONSTRAINT `foreign_otherinfo_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
 -- Constraints for table `overtime_employee`
 --
 ALTER TABLE `overtime_employee`
-  ADD CONSTRAINT `foreign_overtime_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL,
+  ADD CONSTRAINT `foreign_overtime_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL,
   ADD CONSTRAINT `foreign_overtime_overtimeemployee` FOREIGN KEY (`overtime_id`) REFERENCES `overtime` (`overtime_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `parrears_employee`
 --
 ALTER TABLE `parrears_employee`
-  ADD CONSTRAINT `foreign_pArrears_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL,
+  ADD CONSTRAINT `foreign_pArrears_employee` FOREIGN KEY (`emp_id`) REFERENCES `user` (`userID`) ON DELETE SET NULL ON UPDATE SET NULL,
   ADD CONSTRAINT `foreign_pArrears_pArrears` FOREIGN KEY (`pArrears_id`) REFERENCES `parrears` (`pArrears_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `payroll_history`
---
-ALTER TABLE `payroll_history`
-  ADD CONSTRAINT `foreign_payroll` FOREIGN KEY (`payroll_id`) REFERENCES `adhoc_payroll_item` (`payroll_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `payslip`
 --
 ALTER TABLE `payslip`
   ADD CONSTRAINT `foreign_payslip_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `socso`
---
-ALTER TABLE `socso`
-  ADD CONSTRAINT `foreign_socso_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
-
---
--- Constraints for table `spouse`
---
-ALTER TABLE `spouse`
-  ADD CONSTRAINT `foreign_spouse_employee` FOREIGN KEY (`emp_id`) REFERENCES `employee` (`emp_id`) ON DELETE SET NULL ON UPDATE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
